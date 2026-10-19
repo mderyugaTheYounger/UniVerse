@@ -29,15 +29,34 @@ erDiagram
 
   UNIVERSITY {
     int university_id PK
+    string name
+    string email_domain
+    string city
+    string state
   }
   USER {
     int user_id PK
+    int university_id FK
+    string email
+    string password_hash
+    string display_name
+    timestamp created_at
   }
   PROFILE {
     int profile_id PK
+    int user_id FK
+    string bio
+    string interests
+    int graduation_year
   }
   ROOMMATE_PREFERENCE {
     int preference_id PK
+    int user_id FK
+    int budget_max
+    string sleep_schedule
+    string cleanliness
+    boolean pets_ok
+    boolean smoking_ok
   }
   DEPARTMENT {
     string alpha_code PK
@@ -45,6 +64,7 @@ erDiagram
   }
   COURSE {
     uuid course_id PK
+    int university_id FK
     string alpha_code FK
     string numeric_code
     string title
@@ -53,6 +73,7 @@ erDiagram
   }
   MAJOR {
     uuid major_id PK
+    int university_id FK
     string alpha_code FK
     string title
     string description
@@ -60,6 +81,7 @@ erDiagram
   }
   MINOR {
     uuid minor_id PK
+    int university_id FK
     string alpha_code FK
     string title
     string description
@@ -78,14 +100,36 @@ erDiagram
   }
   HOUSING {
     int housing_id PK
+    int university_id FK
+    string name
+    string address
+    int monthly_rent
+    float crime_score
+    float noise_score
   }
   FOOD_PLACE {
     int food_place_id PK
+    int university_id FK
+    string name
+    string type
+    string address
   }
   MAP_TACK {
     int tack_id PK
+    int housing_id FK
+    int food_place_id FK
+    float latitude
+    float longitude
   }
   REVIEW {
     int review_id PK
+    int user_id FK
+    int housing_id FK
+    int food_place_id FK
+    uuid major_id FK
+    uuid minor_id FK
+    int rating
+    string comment
+    timestamp created_at
   }
 ```
