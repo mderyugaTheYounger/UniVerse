@@ -1,24 +1,48 @@
 import { useState } from 'react';
 import LandingPage from './components/LandingPage';
 import LoginPage from './components/LoginPage';
+import ProfilePage from './components/ProfilePage';
 
 export default function App() {
-  const [view, setView] = useState('landing'); // 'landing' | 'signin' | 'signup'
+  const [currentView, setCurrentView] = useState('landing');
+  const [currentUser, setCurrentUser] = useState(null);
+
+  const handleAuthSuccess = (userData) => {
+    setCurrentUser(userData);
+    setCurrentView('profile'); // Switches view to profile upon sign up/in
+  };
+
+  const handleLogout = () => {
+    setCurrentUser(null);
+    setCurrentView('landing');
+  };
 
   return (
     <div>
-      {view === 'landing' && (
+      {currentView === 'landing' && (
         <LandingPage
-          onNavigateToSignIn={() => setView('signin')}
-          onNavigateToSignUp={() => setView('signup')}
+          currentUser={currentUser}
+          onNavigateToSignIn={() => setCurrentView('signin')}
+          onNavigateToSignUp={() => setCurrentView('signup')}
+          onNavigateToProfile={() => setCurrentView('profile')}
+          onLogout={handleLogout}
         />
       )}
 
-      {(view === 'signin' || view === 'signup') && (
+      {(currentView === 'signin' || currentView === 'signup') && (
         <LoginPage
-          initialMode={view === 'signup' ? 'register' : 'login'}
-          onNavigateToLanding={() => setView('landing')}
-          onSwitchMode={(mode) => setView(mode === 'register' ? 'signup' : 'signin')}
+          initialMode={currentView === 'signup' ? 'register' : 'login'}
+          onNavigateToLanding={() => setCurrentView('landing')}
+          onSwitchMode={(mode) => setCurrentView(mode === 'register' ? 'signup' : 'signin')}
+          onAuthSuccess={handleAuthSuccess}
+        />
+      )}
+
+      {currentView === 'profile' && (
+        <ProfilePage
+          currentUser={currentUser}
+          onLogout={handleLogout}
+          onNavigateToLanding={() => setCurrentView('landing')}
         />
       )}
     </div>

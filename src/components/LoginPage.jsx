@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-export default function LoginPage({ initialMode = 'login', onNavigateToLanding, onSwitchMode }) {
+export default function LoginPage({ initialMode = 'login', onNavigateToLanding, onSwitchMode, onAuthSuccess }) {
   // 'login' (Sign In) or 'register' (Sign Up)
   const [isRegistering, setIsRegistering] = useState(initialMode === 'register');
 
@@ -59,8 +59,15 @@ export default function LoginPage({ initialMode = 'login', onNavigateToLanding, 
         return;
       }
       console.log('Sign Up submitted:', { fullName, email, password });
+      if (onAuthSuccess) {
+        onAuthSuccess({ fullName, email });
+      }
     } else {
       console.log('Sign In submitted:', { email, password });
+
+      if (onAuthSuccess) {
+        onAuthSuccess({ email, fullName: fullName || email.split('@')[0] });
+      }
     }
   };
 
