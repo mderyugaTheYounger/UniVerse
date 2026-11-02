@@ -1,111 +1,774 @@
+/* ============================================================
+   UniVerse – UNC Charlotte Themed Stylesheet
+   Colors: Niner Green, Gold, White, Silver/Gray, Dark
+   No gradients. No emojis. No bloated cards.
+   ============================================================ */
+
+/* ----- Color Palette (Official UNCC) ----- */
 :root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+  /* Primary */
+  --niner-green: #005035;
+  --niner-gold: #A49665;
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
+  /* Neutrals */
+  --white: #FFFFFF;
+  --off-white: #F5F5F0;
+  --silver: #B0B0B0;
+  --silver-light: #D6D6D0;
+  --charcoal: #2B2B2B;
+  --dark: #1A1A1A;
 
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
-  color-scheme: light dark;
-  color: var(--text);
-  background: var(--bg);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  /* Functional */
+  --border-color: #C8C8C0;
+  --text-primary: #1A1A1A;
+  --text-secondary: #4A4A48;
+  --text-muted: #7A7A78;
+  --error: #B33030;
+  --focus-ring: rgba(0, 80, 53, 0.5);
 
-  @media (max-width: 1024px) {
-    font-size: 16px;
-  }
+  /* Typography */
+  --sans: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --heading: Georgia, 'Times New Roman', serif;
+
+  /* Spacing */
+  --header-height: 56px;
+  --nav-width: 220px;
+
+  /* Shadows (subtle) */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.12);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-  }
 
-  #social .button-icon {
-    filter: invert(1) brightness(2);
-  }
+/* ----- Reset & Base ----- */
+*, *::before, *::after {
+  box-sizing: border-box;
 }
 
 body {
   margin: 0;
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--text-primary);
+  background-color: var(--off-white);
+  -webkit-font-smoothing: antialiased;
 }
 
 #root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
-  min-height: 100svh;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
-  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  text-align: left;
+  border: none;
 }
 
-h1,
-h2 {
+h1, h2, h3, h4 {
   font-family: var(--heading);
-  font-weight: 500;
-  color: var(--text-h);
+  color: var(--niner-green);
+  margin: 0 0 8px;
+  font-weight: 600;
 }
 
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
-  }
+h1 { font-size: 28px; letter-spacing: -0.4px; }
+h2 { font-size: 20px; }
+h3 { font-size: 16px; }
+
+p { margin: 0 0 4px; }
+
+a {
+  color: var(--niner-green);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
 }
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
-  }
+a:hover {
+  color: var(--niner-gold);
 }
-p {
+
+/* ----- Focus accessibility ----- */
+:focus-visible {
+  outline: 2px solid var(--niner-green);
+  outline-offset: 2px;
+}
+
+
+/* =============================================================
+   SHARED BUTTON STYLES
+   ============================================================= */
+button {
+  font-family: var(--sans);
+  font-size: 14px;
+  cursor: pointer;
+  border: 1px solid var(--border-color);
+  border-radius: 3px;
+  padding: 6px 16px;
+  background: var(--white);
+  color: var(--text-primary);
+  transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+}
+
+button:hover {
+  background-color: var(--niner-green);
+  border-color: var(--niner-green);
+  color: var(--white);
+}
+
+button:active {
+  opacity: 0.85;
+}
+
+
+/* =============================================================
+   LANDING PAGE LAYOUT
+   Full-viewport grid: fixed side nav | open center | footer pinned
+   ============================================================= */
+
+/* --- Top header bar --- */
+main > header:first-child,
+main > aside + header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  height: var(--header-height);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  background-color: var(--niner-green);
+  border-bottom: 3px solid var(--niner-gold);
+}
+
+main > header h1,
+main > aside + header h1 {
+  color: var(--white);
+  font-size: 22px;
+  margin: 0;
+  letter-spacing: 0.5px;
+}
+
+main > header nav,
+main > aside + header nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+main > header nav ul,
+main > aside + header nav ul {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  gap: 2px;
+}
+
+main > header nav ul button {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--silver-light);
+  font-size: 14px;
+  padding: 6px 14px;
+  border-radius: 3px;
+}
+
+main > header nav ul button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--white);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+
+/* --- Profile / account dropdown trigger --- */
+main > header nav > div[aria-label="User Account Menu"],
+main > aside + header nav > div[aria-label="User Account Menu"] {
+  position: relative;
+  margin-left: 8px;
+}
+
+main > header nav > div[aria-label="User Account Menu"] > button {
+  background: var(--niner-gold);
+  color: var(--dark);
+  border: none;
+  padding: 5px 14px;
+  border-radius: 3px;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+main > header nav > div[aria-label="User Account Menu"] > button:hover {
+  background: #bfad79;
+  color: var(--dark);
+}
+
+
+/* --- Profile dropdown menu --- */
+main > header nav > div[aria-label="User Account Menu"] > div {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  width: 200px;
+  background: var(--white);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  box-shadow: var(--shadow-md);
+  z-index: 200;
+  padding: 6px 0;
+}
+
+main > header nav > div[aria-label="User Account Menu"] > div ul {
+  flex-direction: column;
+  gap: 0;
+  padding: 0;
+}
+
+main > header nav > div[aria-label="User Account Menu"] > div li {
+  display: block;
+}
+
+main > header nav > div[aria-label="User Account Menu"] > div li p {
+  padding: 8px 14px;
+  font-size: 12px;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border-color);
   margin: 0;
 }
 
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
+main > header nav > div[aria-label="User Account Menu"] > div li button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  padding: 8px 14px;
+  font-size: 13px;
+  border-radius: 0;
+  color: var(--text-primary);
 }
 
-code {
+main > header nav > div[aria-label="User Account Menu"] > div li button:hover {
+  background: var(--off-white);
+  color: var(--niner-green);
+}
+
+
+/* --- Cookie / privacy notice bar --- */
+main > aside[aria-label="Privacy notice"] {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 10px 24px;
+  background: var(--charcoal);
+  color: var(--silver-light);
+  font-size: 13px;
+  border-top: 2px solid var(--niner-gold);
+}
+
+main > aside[aria-label="Privacy notice"] p {
+  margin: 0;
+}
+
+main > aside[aria-label="Privacy notice"] button {
+  background: var(--niner-gold);
+  color: var(--dark);
+  border: none;
+  font-weight: 600;
+  font-size: 12px;
+  padding: 5px 14px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+main > aside[aria-label="Privacy notice"] button:hover {
+  background: #bfad79;
+  color: var(--dark);
+}
+
+
+/* =============================================================
+   LANDING PAGE — HERO (Center Area)
+   Mostly empty, room for background image placeholders
+   ============================================================= */
+#hero {
+  /* push below fixed header */
+  margin-top: var(--header-height);
+
+  /* Take up the available viewport */
+  min-height: calc(100vh - var(--header-height));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 40px;
+  position: relative;
+  text-align: center;
+
+  /* ─── Hero Background Image ──────────────────────────────
+     "CRI and JRS" — UNC Charlotte campus buildings
+     Author: Stanton49 | License: CC BY-SA 4.0
+     Source: https://commons.wikimedia.org/wiki/File:CRI_and_JRS.jpg
+     ──────────────────────────────────────────────────────── */
+  background-image: url('/hero-campus.jpg');
+  background-size: cover;
+  background-position: center 40%;
+  background-repeat: no-repeat;
+  background-color: var(--niner-green); /* fallback while image loads */
+}
+
+/* Dark scrim so text stays legible over the photo */
+#hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-color: rgba(0, 30, 18, 0.52);
+  pointer-events: none;
+  z-index: 0;
+}
+
+#hero > * {
+  position: relative;
+  z-index: 1;
+}
+
+#hero h2 {
+  font-size: 32px;
+  color: var(--white);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
+  margin-bottom: 10px;
+}
+
+#hero p {
+  color: var(--silver-light);
+  font-size: 16px;
+  max-width: 420px;
+  margin-bottom: 20px;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+
+#hero div {
+  margin-top: 8px;
+}
+
+#hero button {
+  background: var(--niner-gold);
+  color: var(--dark);
+  border: none;
   font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
+  font-weight: 700;
+  padding: 10px 28px;
+  border-radius: 3px;
+  letter-spacing: 0.3px;
+}
+
+#hero button:hover {
+  background: #bfad79;
+  color: var(--dark);
+}
+
+/* CC BY-SA 4.0 Attribution caption — bottom-right corner of hero */
+#hero::after {
+  content: '"CRI and JRS" — Stanton49 | CC BY-SA 4.0 | commons.wikimedia.org/wiki/File:CRI_and_JRS.jpg';
+  position: absolute;
+  bottom: 6px;
+  right: 10px;
+  z-index: 2;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.65);
+  font-style: italic;
+  font-family: var(--sans);
+  pointer-events: none;
+  max-width: 460px;
+  text-align: right;
+}
+
+
+/* =============================================================
+   LANDING PAGE — SIDE NAVIGATION BOX
+   Fixed on the left edge, below the header
+   ============================================================= */
+#features {
+  position: fixed;
+  top: calc(var(--header-height) + 16px);
+  left: 16px;
+  width: var(--nav-width);
+  z-index: 50;
+  background: var(--white);
+  border: 1px solid var(--border-color);
+  border-top: 3px solid var(--niner-green);
+  border-radius: 2px;
+  box-shadow: var(--shadow-sm);
+  padding: 16px;
+}
+
+#features h2 {
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: var(--niner-gold);
+  margin-bottom: 14px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+#features article {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+#features article:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+#features article h3 {
+  font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--niner-green);
+  margin-bottom: 3px;
+}
+
+#features article p {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+
+/* =============================================================
+   FOOTER
+   ============================================================= */
+main > footer {
+  padding: 14px 24px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border-color);
+  background: var(--white);
+}
+
+
+/* =============================================================
+   LOGIN / REGISTER PAGE
+   ============================================================= */
+main > header:first-child > button,
+main > header > button {
+  /* "Back" button in login header */
+}
+
+/* Login page uses a top header without nav, so style differently */
+main > header:only-of-type {
+  background: var(--niner-green);
+  padding: 20px 32px;
+  border-bottom: 3px solid var(--niner-gold);
+  position: static;
+  height: auto;
+}
+
+main > header:only-of-type h1 {
+  color: var(--white);
+  font-size: 26px;
+}
+
+main > header:only-of-type p {
+  color: var(--silver-light);
+  font-size: 14px;
+}
+
+main > header:only-of-type button {
+  background: transparent;
+  color: var(--niner-gold);
+  border: 1px solid var(--niner-gold);
+  font-size: 13px;
+  padding: 4px 12px;
+  margin-bottom: 12px;
+}
+
+main > header:only-of-type button:hover {
+  background: var(--niner-gold);
+  color: var(--dark);
+}
+
+
+/* --- Form area --- */
+main > section form {
+  max-width: 420px;
+  margin: 32px auto;
+}
+
+main > section fieldset {
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 20px 24px;
+  background: var(--white);
+}
+
+main > section fieldset legend {
+  font-family: var(--heading);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--niner-green);
+  padding: 0 8px;
+}
+
+main > section fieldset div {
+  margin-bottom: 14px;
+}
+
+main > section fieldset label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+main > section fieldset input[type="text"],
+main > section fieldset input[type="email"],
+main > section fieldset input[type="password"] {
+  width: 100%;
+  padding: 8px 10px;
+  font-size: 14px;
+  border: 1px solid var(--border-color);
+  border-radius: 3px;
+  background: var(--off-white);
+  color: var(--text-primary);
+  font-family: var(--sans);
+}
+
+main > section fieldset input:focus {
+  border-color: var(--niner-green);
+  box-shadow: 0 0 0 3px var(--focus-ring);
+  outline: none;
+}
+
+main > section fieldset input[type="checkbox"] {
+  accent-color: var(--niner-green);
+  margin-right: 6px;
+}
+
+main > section fieldset p[role="alert"] {
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+main > section fieldset button[type="submit"] {
+  width: 100%;
+  background: var(--niner-green);
+  color: var(--white);
+  border: none;
+  font-size: 15px;
+  font-weight: 600;
+  padding: 10px;
+  border-radius: 3px;
+  margin-top: 4px;
+}
+
+main > section fieldset button[type="submit"]:hover {
+  background: #003d29;
+}
+
+
+/* --- Sign in / Sign up switcher text --- */
+main > section + section {
+  text-align: center;
+  padding: 16px;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+main > section + section button {
+  background: transparent;
+  border: none;
+  color: var(--niner-green);
+  font-weight: 600;
+  text-decoration: underline;
+  padding: 0;
+  font-size: 14px;
+}
+
+main > section + section button:hover {
+  color: var(--niner-gold);
+  background: transparent;
+}
+
+
+/* =============================================================
+   PROFILE PAGE
+   ============================================================= */
+main[style] {
+  padding: 0 !important;   /* override inline padding */
+}
+
+/* Profile header band */
+main > header:first-child:has(+ section + form),
+main > header:first-child:has(+ section + article) {
+  /* fallback: handled by :only-of-type above */
+}
+
+/* Profile page top bar */
+main > header:first-child {
+  /* Inherits the landing header styles when it's the only header */
+}
+
+/* Profile content area */
+main > section + form,
+main > section + article {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+main > section + article section {
+  margin-bottom: 20px;
+}
+
+main > section + article section h2 {
+  font-size: 16px;
+  color: var(--niner-green);
+  border-bottom: 2px solid var(--niner-gold);
+  padding-bottom: 4px;
+  margin-bottom: 10px;
+}
+
+main > section + article ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+main > section + article li {
+  padding: 5px 0;
+  font-size: 14px;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+main > section + article li:last-child {
+  border-bottom: none;
+}
+
+main > section + article li strong {
+  color: var(--text-primary);
+  display: inline-block;
+  min-width: 150px;
+}
+
+/* Profile edit toggle button */
+main > section:has(+ form) button,
+main > section:has(+ article) button {
+  background: var(--white);
+  border: 1px solid var(--niner-green);
+  color: var(--niner-green);
+  font-weight: 600;
+  font-size: 13px;
+}
+
+main > section:has(+ form) button:hover,
+main > section:has(+ article) button:hover {
+  background: var(--niner-green);
+  color: var(--white);
+}
+
+
+/* =============================================================
+   ADDITIONAL BACKGROUND IMAGE PLACEHOLDERS
+   These mark where images should be inserted later.
+   ============================================================= */
+
+/* Secondary placeholder on the right side of the landing page */
+#features::after {
+  content: '[ PLACEHOLDER: Side Nav Background — campus map / logo watermark ]';
+  display: block;
+  margin-top: 16px;
+  padding: 24px 8px;
+  border: 2px dashed var(--silver);
+  border-radius: 4px;
+  text-align: center;
+  color: var(--silver);
+  font-size: 11px;
+  font-style: italic;
+}
+
+/* Footer area placeholder */
+main > footer::before {
+  content: '[ PLACEHOLDER: Footer Banner Image — campus panorama ]';
+  display: block;
+  padding: 20px;
+  margin-bottom: 10px;
+  border: 2px dashed var(--silver);
+  border-radius: 4px;
+  text-align: center;
+  color: var(--silver);
+  font-size: 12px;
+  font-style: italic;
+}
+
+
+/* =============================================================
+   RESPONSIVE
+   ============================================================= */
+@media (max-width: 768px) {
+  :root {
+    --nav-width: 180px;
+  }
+
+  #features {
+    position: static;
+    width: 100%;
+    margin-top: var(--header-height);
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    box-shadow: none;
+  }
+
+  #hero {
+    min-height: 60vh;
+    padding: 40px 20px;
+    margin-top: 0;
+  }
+
+  #hero::before {
+    inset: 10px;
+    font-size: 12px;
+  }
+
+  #hero h2 {
+    font-size: 24px;
+  }
+
+  main > section form {
+    margin: 20px 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  main > header:first-child,
+  main > aside + header {
+    padding: 0 12px;
+  }
+
+  main > header h1 {
+    font-size: 18px;
+  }
+
+  #features {
+    padding: 12px;
+  }
+
+  main > section + article {
+    padding: 16px;
+  }
 }
