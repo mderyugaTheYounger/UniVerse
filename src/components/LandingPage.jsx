@@ -34,6 +34,7 @@ export default function LandingPage({
           <ul>
             <li><button type="button" onClick={() => alert('Map coming soon')}>Map</button></li>
             <li><button type="button" onClick={() => alert('Forum coming soon')}>Forum</button></li>
+            <li><button type="button" onClick={() => alert('Course Catalog coming soon')}>Course Catalog</button></li>
           </ul>
 
           {/* Profile Icon / Account Menu */}
@@ -133,20 +134,32 @@ export default function LandingPage({
         </div>
       </section>
 
-      {/* Feature Summaries */}
-      <section id="features">
-        <h2>Services Overview</h2>
-        <article>
-          <h3>Campus & Housing Map</h3>
+      {/* Services Nav Bar — below hero, above panorama footer */}
+      <section id="features" aria-label="Services Navigation">
+        <h2>Services</h2>
+        <article role="button" tabIndex={0}
+          onClick={() => alert('Map coming soon')}
+          onKeyDown={e => e.key === 'Enter' && alert('Map coming soon')}>
+          <h3>Campus &amp; Housing Map</h3>
           <p>Explore off-campus complexes with crime and noise statistics.</p>
         </article>
-        <article>
+        <article role="button" tabIndex={0}
+          onClick={() => alert('Course Catalog coming soon')}
+          onKeyDown={e => e.key === 'Enter' && alert('Course Catalog coming soon')}>
           <h3>Course Catalog</h3>
           <p>Degree requirements, majors, minors, and prerequisite trees.</p>
         </article>
-        <article>
+        <article role="button" tabIndex={0}
+          onClick={() => alert('Roommate Matching coming soon')}
+          onKeyDown={e => e.key === 'Enter' && alert('Roommate Matching coming soon')}>
           <h3>Roommate Matching</h3>
           <p>Find roommates based on living habits, cleanliness, and budgets.</p>
+        </article>
+        <article role="button" tabIndex={0}
+          onClick={() => alert('Forum coming soon')}
+          onKeyDown={e => e.key === 'Enter' && alert('Forum coming soon')}>
+          <h3>Forum</h3>
+          <p>Discuss housing, courses, and campus life with other students.</p>
         </article>
       </section>
 

@@ -124,7 +124,7 @@ button:active {
 
 /* =============================================================
    LANDING PAGE LAYOUT
-   Full-viewport grid: fixed side nav | open center | footer pinned
+   Fixed topbar | hero flush under it | inline nav bar | panorama footer
    ============================================================= */
 
 /* --- Top header bar --- */
@@ -165,22 +165,25 @@ main > aside + header nav ul {
   list-style: none;
   margin: 0;
   padding: 0;
-  gap: 2px;
+  gap: 4px;
 }
 
+/* Enlarged top nav buttons */
 main > header nav ul button {
   background: transparent;
   border: 1px solid transparent;
   color: var(--silver-light);
-  font-size: 14px;
-  padding: 6px 14px;
+  font-size: 15px;
+  padding: 8px 18px;
   border-radius: 3px;
+  font-weight: 500;
+  letter-spacing: 0.2px;
 }
 
 main > header nav ul button:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.12);
   color: var(--white);
-  border-color: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.25);
 }
 
 
@@ -301,11 +304,12 @@ main > aside[aria-label="Privacy notice"] button:hover {
    Mostly empty, room for background image placeholders
    ============================================================= */
 #hero {
-  /* push below fixed header */
+  /* flush directly under the fixed header — no gap */
   margin-top: var(--header-height);
 
-  /* Take up the available viewport */
+  /* ~75% of viewport height — leaves room for the nav bar + panorama below */
   min-height: calc(100vh - var(--header-height));
+  height: calc(100vh - var(--header-height));
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -394,68 +398,128 @@ main > aside[aria-label="Privacy notice"] button:hover {
 
 
 /* =============================================================
-   LANDING PAGE — SIDE NAVIGATION BOX
-   Fixed on the left edge, below the header
+   LANDING PAGE — SERVICES NAV BAR
+   Horizontal strip below the hero, above the panorama.
    ============================================================= */
 #features {
-  position: fixed;
-  top: calc(var(--header-height) + 16px);
-  left: 16px;
-  width: var(--nav-width);
-  z-index: 50;
+  position: static;
+  width: 100%;
   background: var(--white);
-  border: 1px solid var(--border-color);
   border-top: 3px solid var(--niner-green);
-  border-radius: 2px;
-  box-shadow: var(--shadow-sm);
-  padding: 16px;
+  border-bottom: 1px solid var(--border-color);
+  padding: 0 32px;
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  z-index: 10;
 }
 
 #features h2 {
-  font-size: 14px;
+  font-size: 12px;
   text-transform: uppercase;
-  letter-spacing: 1.2px;
+  letter-spacing: 1.4px;
   color: var(--niner-gold);
-  margin-bottom: 14px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid var(--border-color);
+  margin: 0;
+  padding: 0 20px 0 0;
+  display: flex;
+  align-items: center;
+  border-right: 1px solid var(--border-color);
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
+/* Each article is a clickable nav tab */
 #features article {
-  padding: 10px 0;
-  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  padding: 14px 22px;
+  border-bottom: 3px solid transparent;
+  border-right: 1px solid var(--border-color);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background-color 0.15s;
+  white-space: nowrap;
+  user-select: none;
 }
 
 #features article:last-child {
-  border-bottom: none;
-  padding-bottom: 0;
+  border-right: none;
 }
 
 #features article h3 {
   font-family: var(--sans);
   font-size: 14px;
-  font-weight: 600;
-  color: var(--niner-green);
-  margin-bottom: 3px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin: 0;
+  transition: color 0.15s;
 }
 
 #features article p {
-  font-size: 12px;
-  color: var(--text-muted);
-  line-height: 1.4;
+  display: none; /* description hidden in bar layout */
+}
+
+#features article:hover {
+  background-color: var(--off-white);
+  border-bottom-color: var(--niner-green);
+}
+
+#features article:hover h3 {
+  color: var(--niner-green);
+}
+
+#features article:focus-visible {
+  outline: 2px solid var(--niner-green);
+  outline-offset: -2px;
 }
 
 
 /* =============================================================
-   FOOTER
+   FOOTER — PANORAMA BANNER
    ============================================================= */
 main > footer {
-  padding: 14px 24px;
+  position: relative;
+  padding: 0;
   text-align: center;
   font-size: 12px;
   color: var(--text-muted);
-  border-top: 1px solid var(--border-color);
-  background: var(--white);
+  border-top: 3px solid var(--niner-gold);
+  background: var(--charcoal);
+  overflow: hidden;
+}
+
+/* Panorama image fills the banner */
+main > footer::before {
+  content: '';
+  display: block;
+  width: 100%;
+  height: 220px;
+  background-image: url('/campus-panorama.jpg');
+  background-size: cover;
+  background-position: center 45%;
+  background-repeat: no-repeat;
+  /* subtle dark overlay so attribution text is readable */
+  box-shadow: inset 0 -40px 40px rgba(0, 0, 0, 0.4);
+}
+
+/* Copyright line at the bottom */
+main > footer p {
+  padding: 10px 16px;
+  background: var(--charcoal);
+  color: var(--silver);
+  margin: 0;
+}
+
+/* CC BY 2.0 Attribution — bottom-right of panorama */
+main > footer::after {
+  content: '"UNC-Charlotte" — twbuckner | CC BY 2.0 | flickr.com/photos/twbuckner/6862112159';
+  position: absolute;
+  bottom: 36px;
+  right: 10px;
+  font-size: 10px;
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.60);
+  font-family: var(--sans);
+  pointer-events: none;
 }
 
 
@@ -684,69 +748,42 @@ main > section:has(+ article) button:hover {
 
 /* =============================================================
    ADDITIONAL BACKGROUND IMAGE PLACEHOLDERS
-   These mark where images should be inserted later.
+   Hero scrim handled in #hero section above.
+   Footer panorama handled in footer section above.
    ============================================================= */
-
-/* Secondary placeholder on the right side of the landing page */
-#features::after {
-  content: '[ PLACEHOLDER: Side Nav Background — campus map / logo watermark ]';
-  display: block;
-  margin-top: 16px;
-  padding: 24px 8px;
-  border: 2px dashed var(--silver);
-  border-radius: 4px;
-  text-align: center;
-  color: var(--silver);
-  font-size: 11px;
-  font-style: italic;
-}
-
-/* Footer area placeholder */
-main > footer::before {
-  content: '[ PLACEHOLDER: Footer Banner Image — campus panorama ]';
-  display: block;
-  padding: 20px;
-  margin-bottom: 10px;
-  border: 2px dashed var(--silver);
-  border-radius: 4px;
-  text-align: center;
-  color: var(--silver);
-  font-size: 12px;
-  font-style: italic;
-}
 
 
 /* =============================================================
    RESPONSIVE
    ============================================================= */
 @media (max-width: 768px) {
-  :root {
-    --nav-width: 180px;
+  #features {
+    padding: 0 16px;
+    overflow-x: auto;
+    flex-wrap: nowrap;
   }
 
-  #features {
-    position: static;
-    width: 100%;
-    margin-top: var(--header-height);
-    border-radius: 0;
-    border-left: none;
-    border-right: none;
-    box-shadow: none;
+  #features h2 {
+    display: none; /* hide label on small screens */
+  }
+
+  #features article {
+    padding: 12px 14px;
+    font-size: 13px;
   }
 
   #hero {
-    min-height: 60vh;
+    min-height: 55vh;
+    height: 55vh;
     padding: 40px 20px;
-    margin-top: 0;
-  }
-
-  #hero::before {
-    inset: 10px;
-    font-size: 12px;
   }
 
   #hero h2 {
     font-size: 24px;
+  }
+
+  main > footer::before {
+    height: 140px;
   }
 
   main > section form {
@@ -764,8 +801,9 @@ main > footer::before {
     font-size: 18px;
   }
 
-  #features {
-    padding: 12px;
+  main > header nav ul button {
+    font-size: 13px;
+    padding: 6px 10px;
   }
 
   main > section + article {
