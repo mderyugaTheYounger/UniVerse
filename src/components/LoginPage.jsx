@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 export default function LoginPage({ initialMode = 'login', onNavigateToLanding, onSwitchMode, onAuthSuccess }) {
   // 'login' (Sign In) or 'register' (Sign Up)
-  const [isRegistering, setIsRegistering] = useState(initialMode === 'register');
+  const [internalMode, setInternalMode] = useState(null);
+  const isRegistering = internalMode !== null ? internalMode === 'register' : initialMode === 'register';
 
   // Form Fields
   const [email, setEmail] = useState('');
@@ -11,11 +12,6 @@ export default function LoginPage({ initialMode = 'login', onNavigateToLanding, 
   const [fullName, setFullName] = useState('');
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [emailError, setEmailError] = useState('');
-
-  // Synchronize when parent toggles initialMode
-  useEffect(() => {
-    setIsRegistering(initialMode === 'register');
-  }, [initialMode]);
 
   // Restrict to university email domains
   const isValidCampusEmail = (val) => {
@@ -34,7 +30,7 @@ export default function LoginPage({ initialMode = 'login', onNavigateToLanding, 
   };
 
   const handleToggleMode = (registering) => {
-    setIsRegistering(registering);
+    setInternalMode(registering ? 'register' : 'login');
     setEmailError('');
     if (onSwitchMode) {
       onSwitchMode(registering ? 'register' : 'login');

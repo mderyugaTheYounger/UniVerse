@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 
 export default function LandingPage({
   currentUser,
   onNavigateToSignIn,
   onNavigateToSignUp,
   onNavigateToProfile,
+  onNavigateToCatalog,
+  onNavigateToRoommates,
   onLogout
 }) {
   const [showCookies, setShowCookies] = useState(true);
@@ -58,6 +60,28 @@ export default function LandingPage({
                         type="button"
                         onClick={() => {
                           setIsMenuOpen(false);
+                          onNavigateToCatalog && onNavigateToCatalog();
+                        }}
+                      >
+                        Course Catalog
+                      </button>
+                    </li>
+                    <li>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsMenuOpen(false);
+                          onNavigateToRoommates && onNavigateToRoommates();
+                        }}
+                      >
+                        Roommate Finder
+                      </button>
+                    </li>
+                    <li>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsMenuOpen(false);
                           onNavigateToProfile();
                         }}
                       >
@@ -78,6 +102,28 @@ export default function LandingPage({
                   </ul>
                 ) : (
                   <ul>
+                    <li>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsMenuOpen(false);
+                          onNavigateToCatalog && onNavigateToCatalog();
+                        }}
+                      >
+                        Course Catalog
+                      </button>
+                    </li>
+                    <li>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsMenuOpen(false);
+                          onNavigateToRoommates && onNavigateToRoommates();
+                        }}
+                      >
+                        Roommate Finder
+                      </button>
+                    </li>
                     <li>
                       <button
                         type="button"
@@ -118,14 +164,14 @@ export default function LandingPage({
           <p>Explore off-campus complexes with crime and noise statistics.</p>
         </article>
         <article role="button" tabIndex={0}
-          onClick={() => alert('Course Catalog coming soon')}
-          onKeyDown={e => e.key === 'Enter' && alert('Course Catalog coming soon')}>
+          onClick={onNavigateToCatalog}
+          onKeyDown={e => e.key === 'Enter' && onNavigateToCatalog && onNavigateToCatalog()}>
           <h3>Course Catalog</h3>
           <p>Degree requirements, majors, minors, and prerequisite trees.</p>
         </article>
         <article role="button" tabIndex={0}
-          onClick={() => alert('Roommate Matching coming soon')}
-          onKeyDown={e => e.key === 'Enter' && alert('Roommate Matching coming soon')}>
+          onClick={onNavigateToRoommates}
+          onKeyDown={e => e.key === 'Enter' && onNavigateToRoommates && onNavigateToRoommates()}>
           <h3>Roommate Matching</h3>
           <p>Find roommates based on living habits, cleanliness, and budgets.</p>
         </article>
