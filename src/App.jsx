@@ -2,6 +2,9 @@ import { useState } from 'react';
 import LandingPage from './components/LandingPage';
 import LoginPage from './components/LoginPage';
 import ProfilePage from './components/ProfilePage';
+import CourseCatalogPage from './components/CourseCatalogPage';
+import RoommateFinderPage from './components/RoommateFinderPage';
+import './App.css';
 
 export default function App() {
   const [currentView, setCurrentView] = useState('landing');
@@ -25,6 +28,8 @@ export default function App() {
           onNavigateToSignIn={() => setCurrentView('signin')}
           onNavigateToSignUp={() => setCurrentView('signup')}
           onNavigateToProfile={() => setCurrentView('profile')}
+          onNavigateToCatalog={() => setCurrentView('catalog')}
+          onNavigateToRoommates={() => setCurrentView('roommates')}
           onLogout={handleLogout}
         />
       )}
@@ -43,6 +48,30 @@ export default function App() {
           currentUser={currentUser}
           onLogout={handleLogout}
           onNavigateToLanding={() => setCurrentView('landing')}
+          onNavigateToCatalog={() => setCurrentView('catalog')}
+          onNavigateToRoommates={() => setCurrentView('roommates')}
+        />
+      )}
+
+      {currentView === 'catalog' && (
+        <CourseCatalogPage
+          currentUser={currentUser}
+          onNavigateToLanding={() => setCurrentView('landing')}
+          onNavigateToRoommates={() => setCurrentView('roommates')}
+          onNavigateToProfile={() => setCurrentView('profile')}
+          onNavigateToSignIn={() => setCurrentView('signin')}
+          onLogout={handleLogout}
+        />
+      )}
+
+      {currentView === 'roommates' && (
+        <RoommateFinderPage
+          currentUser={currentUser}
+          onNavigateToLanding={() => setCurrentView('landing')}
+          onNavigateToCatalog={() => setCurrentView('catalog')}
+          onNavigateToProfile={() => setCurrentView('profile')}
+          onNavigateToSignIn={() => setCurrentView('signin')}
+          onLogout={handleLogout}
         />
       )}
     </div>

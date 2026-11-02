@@ -1,6 +1,12 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 
-export default function ProfilePage({ currentUser, onLogout, onNavigateToLanding }) {
+export default function ProfilePage({
+  currentUser,
+  onLogout,
+  onNavigateToLanding,
+  onNavigateToCatalog,
+  onNavigateToRoommates,
+}) {
   const [isEditing, setIsEditing] = useState(false);
 
   const defaultUsername = currentUser?.email
@@ -35,6 +41,16 @@ export default function ProfilePage({ currentUser, onLogout, onNavigateToLanding
         <button type="button" onClick={onNavigateToLanding} style={{ marginRight: '10px' }}>
           &larr; Back to Home
         </button>
+        {onNavigateToCatalog && (
+          <button type="button" onClick={onNavigateToCatalog} style={{ marginRight: '10px' }}>
+            Course Catalog
+          </button>
+        )}
+        {onNavigateToRoommates && (
+          <button type="button" onClick={onNavigateToRoommates} style={{ marginRight: '10px' }}>
+            Roommate Finder
+          </button>
+        )}
         <button type="button" onClick={onLogout}>
           Sign Out
         </button>
