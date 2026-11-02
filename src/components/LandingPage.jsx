@@ -24,19 +24,13 @@ export default function LandingPage({
         </aside>
       )}
 
-      {/* Header with Navigation and Profile Icon Menu on the right */}
+      {/* Header — logo + profile button only */}
       <header>
         <div>
           <h1>UniVerse</h1>
         </div>
 
         <nav aria-label="Main Navigation">
-          <ul>
-            <li><button type="button" onClick={() => alert('Map coming soon')}>Map</button></li>
-            <li><button type="button" onClick={() => alert('Forum coming soon')}>Forum</button></li>
-            <li><button type="button" onClick={() => alert('Course Catalog coming soon')}>Course Catalog</button></li>
-          </ul>
-
           {/* Profile Icon / Account Menu */}
           <div aria-label="User Account Menu">
             <button
@@ -45,15 +39,13 @@ export default function LandingPage({
               aria-haspopup="true"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
             >
-              {/* Fallback to simple SVG / text profile icon */}
-              👤 {currentUser ? currentUser.fullName || currentUser.email : 'Profile'}
+              {currentUser ? currentUser.fullName || currentUser.email : 'Profile'}
             </button>
 
             {/* Dropdown Menu */}
             {isMenuOpen && (
               <div>
                 {currentUser ? (
-                  // Logged-in Menu Options
                   <ul>
                     <li>
                       <p>
@@ -85,7 +77,6 @@ export default function LandingPage({
                     </li>
                   </ul>
                 ) : (
-                  // Guest / Logged-out Menu Options
                   <ul>
                     <li>
                       <button
@@ -117,24 +108,7 @@ export default function LandingPage({
         </nav>
       </header>
 
-      {/* Hero Section */}
-      <section id="hero">
-        <h2>Your University Companion</h2>
-        <p>Explore courses, find housing, review apartments, and match with roommates.</p>
-        <div>
-          {currentUser ? (
-            <button type="button" onClick={onNavigateToProfile}>
-              Go to Your Profile
-            </button>
-          ) : (
-            <button type="button" onClick={onNavigateToSignUp}>
-              Get Started
-            </button>
-          )}
-        </div>
-      </section>
-
-      {/* Services Nav Bar — below hero, above panorama footer */}
+      {/* Services Nav Bar — directly below topbar, above hero */}
       <section id="features" aria-label="Services Navigation">
         <h2>Services</h2>
         <article role="button" tabIndex={0}
@@ -161,6 +135,23 @@ export default function LandingPage({
           <h3>Forum</h3>
           <p>Discuss housing, courses, and campus life with other students.</p>
         </article>
+      </section>
+
+      {/* Hero Section */}
+      <section id="hero">
+        <h2>Your University Companion</h2>
+        <p>Explore courses, find housing, review apartments, and match with roommates.</p>
+        <div>
+          {currentUser ? (
+            <button type="button" onClick={onNavigateToProfile}>
+              Go to Your Profile
+            </button>
+          ) : (
+            <button type="button" onClick={onNavigateToSignUp}>
+              Get Started
+            </button>
+          )}
+        </div>
       </section>
 
       <footer>

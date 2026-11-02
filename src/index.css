@@ -124,13 +124,13 @@ button:active {
 
 /* =============================================================
    LANDING PAGE LAYOUT
-   Fixed topbar | hero flush under it | inline nav bar | panorama footer
+   Stack order (all fixed): topbar → services bar → hero fills rest
    ============================================================= */
 
 /* --- Top header bar --- */
 main > header:first-child,
 main > aside + header {
-  position: fixed;
+  position: sticky;
   top: 0;
   left: 0;
   right: 0;
@@ -142,6 +142,7 @@ main > aside + header {
   padding: 0 24px;
   background-color: var(--niner-green);
   border-bottom: 3px solid var(--niner-gold);
+  margin: 0;
 }
 
 main > header h1,
@@ -152,63 +153,40 @@ main > aside + header h1 {
   letter-spacing: 0.5px;
 }
 
+/* Nav in header holds only the profile button — no ul needed */
 main > header nav,
 main > aside + header nav {
   display: flex;
   align-items: center;
-  gap: 4px;
 }
 
+/* Hide any stray ul in the topbar nav (safety) */
 main > header nav ul,
 main > aside + header nav ul {
-  display: flex;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  gap: 4px;
+  display: none;
 }
-
-/* Enlarged top nav buttons */
-main > header nav ul button {
-  background: transparent;
-  border: 1px solid transparent;
-  color: var(--silver-light);
-  font-size: 15px;
-  padding: 8px 18px;
-  border-radius: 3px;
-  font-weight: 500;
-  letter-spacing: 0.2px;
-}
-
-main > header nav ul button:hover {
-  background: rgba(255, 255, 255, 0.12);
-  color: var(--white);
-  border-color: rgba(255, 255, 255, 0.25);
-}
-
 
 /* --- Profile / account dropdown trigger --- */
 main > header nav > div[aria-label="User Account Menu"],
 main > aside + header nav > div[aria-label="User Account Menu"] {
   position: relative;
-  margin-left: 8px;
 }
 
 main > header nav > div[aria-label="User Account Menu"] > button {
   background: var(--niner-gold);
   color: var(--dark);
   border: none;
-  padding: 5px 14px;
+  padding: 7px 18px;
   border-radius: 3px;
   font-weight: 600;
-  font-size: 13px;
+  font-size: 14px;
+  cursor: pointer;
 }
 
 main > header nav > div[aria-label="User Account Menu"] > button:hover {
   background: #bfad79;
   color: var(--dark);
 }
-
 
 /* --- Profile dropdown menu --- */
 main > header nav > div[aria-label="User Account Menu"] > div {
@@ -225,9 +203,12 @@ main > header nav > div[aria-label="User Account Menu"] > div {
 }
 
 main > header nav > div[aria-label="User Account Menu"] > div ul {
+  display: flex;
   flex-direction: column;
-  gap: 0;
+  list-style: none;
+  margin: 0;
   padding: 0;
+  gap: 0;
 }
 
 main > header nav > div[aria-label="User Account Menu"] > div li {
@@ -300,16 +281,91 @@ main > aside[aria-label="Privacy notice"] button:hover {
 
 
 /* =============================================================
+   LANDING PAGE — SERVICES NAV BAR
+   Anchored directly above the hero image.
+   ============================================================= */
+#features {
+  position: relative;
+  width: 100%;
+  background: var(--white);
+  border-top: none;              /* topbar gold border already separates them */
+  border-bottom: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+  padding: 0 32px;
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  margin: 0;
+  z-index: 10;
+}
+
+#features h2 {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1.4px;
+  color: var(--niner-gold);
+  margin: 0;
+  padding: 0 20px 0 0;
+  display: flex;
+  align-items: center;
+  border-right: 1px solid var(--border-color);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Each article is a clickable nav tab */
+#features article {
+  display: flex;
+  align-items: center;
+  padding: 14px 22px;
+  border-bottom: 3px solid transparent;
+  border-right: 1px solid var(--border-color);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background-color 0.15s;
+  white-space: nowrap;
+  user-select: none;
+  margin: 0;
+}
+
+#features article:last-child {
+  border-right: none;
+}
+
+#features article h3 {
+  font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin: 0;
+  transition: color 0.15s;
+}
+
+#features article p {
+  display: none; /* description hidden in bar layout */
+}
+
+#features article:hover {
+  background-color: var(--off-white);
+  border-bottom-color: var(--niner-green);
+}
+
+#features article:hover h3 {
+  color: var(--niner-green);
+}
+
+#features article:focus-visible {
+  outline: 2px solid var(--niner-green);
+  outline-offset: -2px;
+}
+
+
+/* =============================================================
    LANDING PAGE — HERO (Center Area)
-   Mostly empty, room for background image placeholders
+   Anchored directly underneath the services bar with zero gap.
    ============================================================= */
 #hero {
-  /* flush directly under the fixed header — no gap */
-  margin-top: var(--header-height);
-
-  /* ~75% of viewport height — leaves room for the nav bar + panorama below */
-  min-height: calc(100vh - var(--header-height));
-  height: calc(100vh - var(--header-height));
+  margin: 0;
+  min-height: calc(100vh - var(--header-height) - 49px);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -398,128 +454,16 @@ main > aside[aria-label="Privacy notice"] button:hover {
 
 
 /* =============================================================
-   LANDING PAGE — SERVICES NAV BAR
-   Horizontal strip below the hero, above the panorama.
-   ============================================================= */
-#features {
-  position: static;
-  width: 100%;
-  background: var(--white);
-  border-top: 3px solid var(--niner-green);
-  border-bottom: 1px solid var(--border-color);
-  padding: 0 32px;
-  display: flex;
-  align-items: stretch;
-  gap: 0;
-  z-index: 10;
-}
-
-#features h2 {
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 1.4px;
-  color: var(--niner-gold);
-  margin: 0;
-  padding: 0 20px 0 0;
-  display: flex;
-  align-items: center;
-  border-right: 1px solid var(--border-color);
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-/* Each article is a clickable nav tab */
-#features article {
-  display: flex;
-  align-items: center;
-  padding: 14px 22px;
-  border-bottom: 3px solid transparent;
-  border-right: 1px solid var(--border-color);
-  cursor: pointer;
-  transition: color 0.15s, border-color 0.15s, background-color 0.15s;
-  white-space: nowrap;
-  user-select: none;
-}
-
-#features article:last-child {
-  border-right: none;
-}
-
-#features article h3 {
-  font-family: var(--sans);
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--text-secondary);
-  margin: 0;
-  transition: color 0.15s;
-}
-
-#features article p {
-  display: none; /* description hidden in bar layout */
-}
-
-#features article:hover {
-  background-color: var(--off-white);
-  border-bottom-color: var(--niner-green);
-}
-
-#features article:hover h3 {
-  color: var(--niner-green);
-}
-
-#features article:focus-visible {
-  outline: 2px solid var(--niner-green);
-  outline-offset: -2px;
-}
-
-
-/* =============================================================
-   FOOTER — PANORAMA BANNER
+   FOOTER
+   campus-panorama.jpg is preserved in /public for future use.
    ============================================================= */
 main > footer {
-  position: relative;
-  padding: 0;
+  padding: 14px 24px;
   text-align: center;
   font-size: 12px;
   color: var(--text-muted);
-  border-top: 3px solid var(--niner-gold);
-  background: var(--charcoal);
-  overflow: hidden;
-}
-
-/* Panorama image fills the banner */
-main > footer::before {
-  content: '';
-  display: block;
-  width: 100%;
-  height: 220px;
-  background-image: url('/campus-panorama.jpg');
-  background-size: cover;
-  background-position: center 45%;
-  background-repeat: no-repeat;
-  /* subtle dark overlay so attribution text is readable */
-  box-shadow: inset 0 -40px 40px rgba(0, 0, 0, 0.4);
-}
-
-/* Copyright line at the bottom */
-main > footer p {
-  padding: 10px 16px;
-  background: var(--charcoal);
-  color: var(--silver);
-  margin: 0;
-}
-
-/* CC BY 2.0 Attribution — bottom-right of panorama */
-main > footer::after {
-  content: '"UNC-Charlotte" — twbuckner | CC BY 2.0 | flickr.com/photos/twbuckner/6862112159';
-  position: absolute;
-  bottom: 36px;
-  right: 10px;
-  font-size: 10px;
-  font-style: italic;
-  color: rgba(255, 255, 255, 0.60);
-  font-family: var(--sans);
-  pointer-events: none;
+  border-top: 1px solid var(--border-color);
+  background: var(--white);
 }
 
 
@@ -764,7 +708,7 @@ main > section:has(+ article) button:hover {
   }
 
   #features h2 {
-    display: none; /* hide label on small screens */
+    display: none;
   }
 
   #features article {
@@ -773,17 +717,11 @@ main > section:has(+ article) button:hover {
   }
 
   #hero {
-    min-height: 55vh;
-    height: 55vh;
     padding: 40px 20px;
   }
 
   #hero h2 {
     font-size: 24px;
-  }
-
-  main > footer::before {
-    height: 140px;
   }
 
   main > section form {
@@ -799,11 +737,6 @@ main > section:has(+ article) button:hover {
 
   main > header h1 {
     font-size: 18px;
-  }
-
-  main > header nav ul button {
-    font-size: 13px;
-    padding: 6px 10px;
   }
 
   main > section + article {
