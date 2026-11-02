@@ -1,0 +1,62 @@
+services:
+  user-db:
+    image: postgres:16
+    container_name: user-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: user_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - user_db_data:/var/lib/postgresql/data
+      - ./db/user/init:/docker-entrypoint-initdb.d:ro
+
+  course-db:
+    image: postgres:16
+    container_name: course-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: course_db
+    ports:
+      - "5434:5432"
+    volumes:
+      - course_db_data:/var/lib/postgresql/data
+      - ./db/course/init:/docker-entrypoint-initdb.d:ro
+
+  roommate-db:
+    image: postgres:16
+    container_name: roommate-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: roommate_db
+    ports:
+      - "5435:5432"
+    volumes:
+      - roommate_db_data:/var/lib/postgresql/data
+      - ./db/roommate/init:/docker-entrypoint-initdb.d:ro
+
+  map-tack-db:
+    image: postgres:16
+    container_name: map-tack-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: map_tack_db
+    ports:
+      - "5436:5432"
+    volumes:
+      - map_tack_db_data:/var/lib/postgresql/data
+      - ./db/map_tack/init:/docker-entrypoint-initdb.d:ro
+
+volumes:
+  user_db_data:
+  course_db_data:
+  roommate_db_data:
+  map_tack_db_data:
