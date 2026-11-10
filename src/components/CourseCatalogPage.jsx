@@ -259,9 +259,9 @@ function SkeletonRows({ count = 6 }) {
 // ============================================================================
 // Sub-component: CourseListRow — single expandable course row
 // ============================================================================
-function CourseListRow({ course, isBookmarked, onBookmark, onAddToPlan }) {
+function CourseListRow({ course, isInPlan, onAddToPlan }) {
   const [expanded, setExpanded] = useState(false);
-  const [prereqs, setPrereqs] = useState(null); // null = not loaded
+  const [prereqs, setPrereqs] = useState(null); // null = not yet fetched
   const [loadingPrereqs, setLoadingPrereqs] = useState(false);
   const detailRef = useRef(null);
 
@@ -346,17 +346,11 @@ function CourseListRow({ course, isBookmarked, onBookmark, onAddToPlan }) {
           <div className="course-detail-actions">
             <button
               type="button"
-              className="btn-secondary"
-              onClick={() => onAddToPlan(course)}
+              className={isInPlan ? 'btn-secondary btn--active' : 'btn-primary'}
+              onClick={() => !isInPlan && onAddToPlan(course)}
+              aria-disabled={isInPlan}
             >
-              Add to Plan
-            </button>
-            <button
-              type="button"
-              className={isBookmarked ? 'btn-secondary btn--active' : 'btn-primary'}
-              onClick={() => onBookmark(course.course_id)}
-            >
-              {isBookmarked ? 'Saved' : 'Save Course'}
+              {isInPlan ? 'Added to Plan' : 'Add to Plan'}
             </button>
           </div>
         </div>
@@ -393,16 +387,6 @@ export default function CourseCatalogPage({
 }) {
   // ---- Tab state ----
   const [activeTab, setActiveTab] = useState('courses');
-
-  // ---- Bookmarks ----
-  const [bookmarkedCourses, setBookmarkedCourses] = useState(new Set(['c-104', 'c-105']));
-  const toggleBookmark = useCallback((courseId) => {
-    setBookmarkedCourses((prev) => {
-      const next = new Set(prev);
-      next.has(courseId) ? next.delete(courseId) : next.add(courseId);
-      return next;
-    });
-  }, []);
 
   // ---- Course filter state ----
   const [searchQuery, setSearchQuery] = useState('');
@@ -795,7 +779,7 @@ export default function CourseCatalogPage({
                   </span>
                 )}
                 <span>
-                  Saved: <strong>{bookmarkedCourses.size}</strong>
+                  In plan: <strong>{planEntries.length}</strong>
                 </span>
               </div>
             </div>
@@ -832,8 +816,7 @@ export default function CourseCatalogPage({
                     <CourseListRow
                       key={course.course_id}
                       course={course}
-                      isBookmarked={bookmarkedCourses.has(course.course_id)}
-                      onBookmark={toggleBookmark}
+                      isInPlan={planEntries.some((e) => e.course_id === course.course_id)}
                       onAddToPlan={handleAddToPlan}
                     />
                   ))}
