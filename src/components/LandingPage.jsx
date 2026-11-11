@@ -7,6 +7,7 @@ export default function LandingPage({
   onNavigateToProfile,
   onNavigateToCatalog,
   onNavigateToRoommates,
+  onNavigateToMap,
   onLogout
 }) {
   const [showCookies, setShowCookies] = useState(true);
@@ -60,6 +61,17 @@ export default function LandingPage({
                         type="button"
                         onClick={() => {
                           setIsMenuOpen(false);
+                          onNavigateToMap && onNavigateToMap();
+                        }}
+                      >
+                        Housing &amp; Safety Map
+                      </button>
+                    </li>
+                    <li>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsMenuOpen(false);
                           onNavigateToCatalog && onNavigateToCatalog();
                         }}
                       >
@@ -102,6 +114,17 @@ export default function LandingPage({
                   </ul>
                 ) : (
                   <ul>
+                    <li>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsMenuOpen(false);
+                          onNavigateToMap && onNavigateToMap();
+                        }}
+                      >
+                        Housing &amp; Safety Map
+                      </button>
+                    </li>
                     <li>
                       <button
                         type="button"
@@ -157,27 +180,39 @@ export default function LandingPage({
       {/* Services Nav Bar — directly below topbar, above hero */}
       <section id="features" aria-label="Services Navigation">
         <h2>Services</h2>
-        <article role="button" tabIndex={0}
-          onClick={() => alert('Map coming soon')}
-          onKeyDown={e => e.key === 'Enter' && alert('Map coming soon')}>
+        <article
+          role="button"
+          tabIndex={0}
+          onClick={onNavigateToMap}
+          onKeyDown={e => e.key === 'Enter' && onNavigateToMap && onNavigateToMap()}
+        >
           <h3>Campus &amp; Housing Map</h3>
           <p>Explore off-campus complexes with crime and noise statistics.</p>
         </article>
-        <article role="button" tabIndex={0}
+        <article
+          role="button"
+          tabIndex={0}
           onClick={onNavigateToCatalog}
-          onKeyDown={e => e.key === 'Enter' && onNavigateToCatalog && onNavigateToCatalog()}>
+          onKeyDown={e => e.key === 'Enter' && onNavigateToCatalog && onNavigateToCatalog()}
+        >
           <h3>Course Catalog</h3>
           <p>Degree requirements, majors, minors, and prerequisite trees.</p>
         </article>
-        <article role="button" tabIndex={0}
+        <article
+          role="button"
+          tabIndex={0}
           onClick={onNavigateToRoommates}
-          onKeyDown={e => e.key === 'Enter' && onNavigateToRoommates && onNavigateToRoommates()}>
+          onKeyDown={e => e.key === 'Enter' && onNavigateToRoommates && onNavigateToRoommates()}
+        >
           <h3>Roommate Matching</h3>
           <p>Find roommates based on living habits, cleanliness, and budgets.</p>
         </article>
-        <article role="button" tabIndex={0}
+        <article
+          role="button"
+          tabIndex={0}
           onClick={() => alert('Forum coming soon')}
-          onKeyDown={e => e.key === 'Enter' && alert('Forum coming soon')}>
+          onKeyDown={e => e.key === 'Enter' && alert('Forum coming soon')}
+        >
           <h3>Forum</h3>
           <p>Discuss housing, courses, and campus life with other students.</p>
         </article>
@@ -187,7 +222,7 @@ export default function LandingPage({
       <section id="hero">
         <h2>Your University Companion</h2>
         <p>Explore courses, find housing, review apartments, and match with roommates.</p>
-        <div>
+        <div style={{ display: 'flex', gap: '10px' }}>
           {currentUser ? (
             <button type="button" onClick={onNavigateToProfile}>
               Go to Your Profile
@@ -197,6 +232,9 @@ export default function LandingPage({
               Get Started
             </button>
           )}
+          <button type="button" onClick={onNavigateToMap}>
+            View Housing Map
+          </button>
         </div>
       </section>
 
