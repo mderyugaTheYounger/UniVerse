@@ -1,92 +1,33 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
-const CAMPUS_CENTER = { lat: 35.3071, lng: -80.7352 };
+import {
+  CAMPUS_CENTER,
+  getPlacesByCategory,
+  allMockPlaces,
+} from '../data/mappingData';
+
 const METERS_PER_MILE = 1609.34;
 const MIN_MILES = 1;
-const MAX_MILES = 20;
-const FETCH_TIMEOUT_MS = 10000;
+const MAX_MILES = 13;
 
-// High-availability Overpass mirrors supporting GET queries
-const OVERPASS_ENDPOINTS = [
-  'https://overpass-api.de/api/interpreter?data=',
-  'https://overpass.kumi.systems/api/interpreter?data=',
-];
-
-// UNCC Standard Housing lookup dictionary
-const UNCC_HOUSING_STANDARDS = {
-  // Gold Standard
-  'university crossings': { tier: 'Gold Standard', status: 'Approved' },
-  'university walk': { tier: 'Gold Standard', status: 'Approved' },
-  'rush student living': { tier: 'Gold Standard', status: 'Approved' },
-  'rush': { tier: 'Gold Standard', status: 'Approved' },
-  'university village': { tier: 'Gold Standard', status: 'Approved' },
-  'university townhomes at charlotte': { tier: 'Gold Standard', status: 'Approved' },
-  'townhomes at 49 north': { tier: 'Gold Standard', status: 'Approved' },
-  'the drake': { tier: 'Gold Standard', status: 'Approved' },
-  'east village': { tier: 'Gold Standard', status: 'Approved' },
-  'millennium one': { tier: 'Gold Standard', status: 'Approved' },
-  'junction 49': { tier: 'Gold Standard', status: 'Approved' },
-  'boulevard 98': { tier: 'Gold Standard', status: 'Approved' },
-  'arcadia': { tier: 'Gold Standard', status: 'Approved' },
-  'arcadia student living': { tier: 'Gold Standard', status: 'Approved' },
-  'aspen heights': { tier: 'Gold Standard', status: 'Approved' },
-  'aspen heights university city': { tier: 'Gold Standard', status: 'Approved' },
-
-  // Green Standard
-  'belle haven': { tier: 'Green Standard', status: 'Approved' },
-  'belle haven apartments': { tier: 'Green Standard', status: 'Approved' },
-  'walden station': { tier: 'Green Standard', status: 'Approved' },
-  'yugo charlotte college downs': { tier: 'Green Standard', status: 'Approved' },
-  'college downs': { tier: 'Green Standard', status: 'Approved' },
-};
-
-// Seed dataset to guarantee the map has real points even if OSM is congested
-const SEED_CAMPUS_PLACES = [
-  { id: 'seed-g1', name: 'University Crossings', category: 'housing', tier: 'Gold Standard', lat: 35.3117, lng: -80.7381, address: '9201 University City Blvd', distance: 0.4 },
-  { id: 'seed-g2', name: 'University Walk', category: 'housing', tier: 'Gold Standard', lat: 35.3028, lng: -80.7342, address: '9005 University Walk Cir', distance: 0.3 },
-  { id: 'seed-g3', name: 'Rush Student Living', category: 'housing', tier: 'Gold Standard', lat: 35.3015, lng: -80.7360, address: '9200 University Walk Cir', distance: 0.4 },
-  { id: 'seed-g4', name: 'University Village', category: 'housing', tier: 'Gold Standard', lat: 35.3168, lng: -80.7289, address: '9915 University Terrace Dr', distance: 0.8 },
-  { id: 'seed-g5', name: 'The Drake', category: 'housing', tier: 'Gold Standard', lat: 35.3061, lng: -80.7225, address: '404 John Kirk Dr', distance: 0.7 },
-  { id: 'seed-g6', name: 'Millennium One', category: 'housing', tier: 'Gold Standard', lat: 35.3180, lng: -80.7250, address: '10005 University City Blvd', distance: 0.9 },
-  { id: 'seed-g7', name: 'Boulevard 98', category: 'housing', tier: 'Gold Standard', lat: 35.3005, lng: -80.7495, address: '9815 N Tryon St', distance: 1.1 },
-  { id: 'seed-g8', name: 'Arcadia Student Living', category: 'housing', tier: 'Gold Standard', lat: 35.3262, lng: -80.7108, address: '2120 Arcadia Village Dr', distance: 2.0 },
-  { id: 'seed-g9', name: 'Aspen Heights University City', category: 'housing', tier: 'Gold Standard', lat: 35.3288, lng: -80.7072, address: '11025 Aspen Heights Dr', distance: 2.3 },
-  { id: 'seed-gr1', name: 'Belle Haven Apartments', category: 'housing', tier: 'Green Standard', lat: 35.3201, lng: -80.7512, address: '8920 Sandburg Ave', distance: 1.3 },
-  { id: 'seed-gr2', name: 'Walden Station', category: 'housing', tier: 'Green Standard', lat: 35.3045, lng: -80.7302, address: '320 E Mallard Creek Church Rd', distance: 0.3 },
-  { id: 'seed-gr3', name: 'Yugo Charlotte College Downs', category: 'housing', tier: 'Green Standard', lat: 35.3022, lng: -80.7265, address: '1205 College Downs Dr', distance: 0.6 },
-  { id: 'seed-f1', name: 'Boardwalk Billy’s', category: 'food', tier: null, cuisine: 'BBQ & Seafood', lat: 35.3106, lng: -80.7497, address: '9005 JM Keynes Dr', distance: 0.9 },
-  { id: 'seed-f2', name: 'Passage to India', category: 'food', tier: null, cuisine: 'Indian', lat: 35.3142, lng: -80.7431, address: '9510 University Terrace Dr', distance: 0.6 },
-  { id: 'seed-f3', name: 'Cook Out', category: 'food', tier: null, cuisine: 'Burgers & Shakes', lat: 35.2954, lng: -80.7588, address: '9601 N Tryon St', distance: 1.5 },
-  { id: 'seed-f4', name: 'Cava', category: 'food', tier: null, cuisine: 'Mediterranean', lat: 35.3101, lng: -80.7479, address: '8936 JM Keynes Dr', distance: 0.8 },
-  { id: 'seed-f5', name: 'Optimist Hall', category: 'food', tier: null, cuisine: 'Food Hall', lat: 35.2341, lng: -80.8285, address: '1115 N Brevard St', distance: 7.4 },
-];
-
-function getStandardStatus(name) {
-  if (!name) return { tier: 'General Housing', status: null };
-  const cleaned = name.toLowerCase().trim();
-  for (const [key, val] of Object.entries(UNCC_HOUSING_STANDARDS)) {
-    if (cleaned.includes(key)) {
-      return val;
-    }
-  }
-  return { tier: 'General Housing', status: null };
-}
-
-function makeIcon(category, tier, selected) {
+function makeIcon(place, selected) {
   let color = '#2563eb';
   let emoji = '🏠';
 
-  if (category === 'food') {
-    color = '#d97706';
+  if (place.category === 'hub') {
+    color = '#7c3aed'; // Purple badge for food plazas/hubs
+    emoji = '🏬';
+  } else if (place.category === 'food') {
+    color = '#d97706'; // Amber for standalone food
     emoji = '🍔';
-  } else if (tier === 'Gold Standard') {
-    color = '#ca8a04';
+  } else if (place.tier === 'Gold Standard') {
+    color = '#ca8a04'; // Gold accent
     emoji = '⭐';
-  } else if (tier === 'Green Standard') {
-    color = '#15803d';
+  } else if (place.tier === 'Green Standard') {
+    color = '#15803d'; // Green accent
     emoji = '🌿';
   }
 
@@ -96,7 +37,7 @@ function makeIcon(category, tier, selected) {
     html: `<div style="
       width:${size}px;height:${size}px;border-radius:50%;
       background:${color};border:2px solid ${selected ? '#000' : '#fff'};
-      box-shadow:0 2px 6px rgba(0,0,0,.4);
+      box-shadow:0 2px 6px rgba(0,0,0,.45);
       display:flex;align-items:center;justify-content:center;
       font-size:${selected ? 18 : 14}px;">${emoji}</div>`,
     iconSize: [size, size],
@@ -105,97 +46,11 @@ function makeIcon(category, tier, selected) {
   });
 }
 
-function haversineMiles(lat1, lng1, lat2, lng2) {
-  const R = 3958.8;
-  const toRad = (d) => (d * Math.PI) / 180;
-  const dLat = toRad(lat2 - lat1);
-  const dLng = toRad(lng2 - lng1);
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
-  return 2 * R * Math.asin(Math.sqrt(a));
-}
-
-// Bounded query for high-speed response
-function buildQuery(radiusMeters) {
-  const around = `(around:${radiusMeters},${CAMPUS_CENTER.lat},${CAMPUS_CENTER.lng})`;
-  return `[out:json][timeout:10];(node["amenity"~"restaurant|fast_food|cafe"]["name"]${around};node["building"~"apartments|dormitory"]["name"]${around};);out 150;`;
-}
-
-async function queryOverpass(query, outerSignal) {
-  const controllers = OVERPASS_ENDPOINTS.map(() => new AbortController());
-  const cancelAll = () => controllers.forEach((c) => c.abort());
-  outerSignal.addEventListener('abort', cancelAll);
-  const timeoutId = setTimeout(cancelAll, FETCH_TIMEOUT_MS);
-
-  const attempts = OVERPASS_ENDPOINTS.map(async (baseUrl, i) => {
-    try {
-      const res = await fetch(`${baseUrl}${encodeURIComponent(query)}`, {
-        method: 'GET',
-        signal: controllers[i].signal,
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      if (!data.elements || data.elements.length === 0) throw new Error('No data');
-      return data;
-    } catch (err) {
-      if (err.name === 'AbortError') throw new Error('Timeout');
-      throw err;
-    }
-  });
-
-  try {
-    return await Promise.any(attempts);
-  } finally {
-    clearTimeout(timeoutId);
-    cancelAll();
-    outerSignal.removeEventListener('abort', cancelAll);
-  }
-}
-
-function parseElements(elements) {
-  const seen = new Set();
-  const out = [];
-
-  for (const el of elements) {
-    const tags = el.tags || {};
-    if (!tags.name) continue;
-
-    const lat = el.lat ?? el.center?.lat;
-    const lng = el.lon ?? el.center?.lon;
-    if (lat == null || lng == null) continue;
-
-    const isFood = ['restaurant', 'fast_food', 'cafe'].includes(tags.amenity);
-    const category = isFood ? 'food' : 'housing';
-    const standardInfo = isFood ? null : getStandardStatus(tags.name);
-
-    const dedupeKey = `${category}-${tags.name.toLowerCase().trim()}`;
-    if (seen.has(dedupeKey)) continue;
-    seen.add(dedupeKey);
-
-    out.push({
-      id: `${el.type}-${el.id}`,
-      name: tags.name,
-      category,
-      tier: standardInfo ? standardInfo.tier : null,
-      status: standardInfo ? standardInfo.status : null,
-      lat,
-      lng,
-      address: tags['addr:street']
-        ? `${tags['addr:housenumber'] || ''} ${tags['addr:street']}`.trim()
-        : 'Charlotte Area',
-      cuisine: tags.cuisine ? tags.cuisine.replace(/;/g, ', ') : null,
-      distance: haversineMiles(CAMPUS_CENTER.lat, CAMPUS_CENTER.lng, lat, lng),
-    });
-  }
-
-  return out.sort((a, b) => a.distance - b.distance);
-}
-
 function MapController({ radiusMiles, selectedSpot }) {
   const map = useMap();
 
   useEffect(() => {
+    // Fits strictly within the boundary circle to avoid out-of-bounds pins
     const bounds = L.latLng(CAMPUS_CENTER.lat, CAMPUS_CENTER.lng).toBounds(
       radiusMiles * METERS_PER_MILE * 2
     );
@@ -204,7 +59,9 @@ function MapController({ radiusMiles, selectedSpot }) {
 
   useEffect(() => {
     if (selectedSpot) {
-      map.flyTo([selectedSpot.lat, selectedSpot.lng], Math.max(map.getZoom(), 15), { duration: 0.6 });
+      map.flyTo([selectedSpot.lat, selectedSpot.lng], Math.max(map.getZoom(), 15), {
+        duration: 0.5,
+      });
     }
   }, [selectedSpot, map]);
 
@@ -212,86 +69,50 @@ function MapController({ radiusMiles, selectedSpot }) {
 }
 
 export default function HousingMap({ onNavigateBack }) {
-  const [sliderMiles, setSliderMiles] = useState(5);
   const [radiusMiles, setRadiusMiles] = useState(5);
   const [filterType, setFilterType] = useState('all');
-  const [allPlaces, setAllPlaces] = useState([]);
-  const [loading, setLoading] = useState(false);
   const [selectedSpot, setSelectedSpot] = useState(null);
-  const cacheRef = useRef(new Map());
 
-  // Debounce slider updates
-  useEffect(() => {
-    const timer = setTimeout(() => setRadiusMiles(sliderMiles), 500);
-    return () => clearTimeout(timer);
-  }, [sliderMiles]);
+  // Instant local data retrieval via mappingData helper
+  const places = useMemo(() => {
+    return getPlacesByCategory(filterType, radiusMiles).sort(
+      (a, b) => a.distanceMiles - b.distanceMiles
+    );
+  }, [filterType, radiusMiles]);
 
-  // Fetch dynamically on radius changes
-  useEffect(() => {
-    if (cacheRef.current.has(radiusMiles)) {
-      setAllPlaces(cacheRef.current.get(radiusMiles));
-      return;
-    }
-
-    const controller = new AbortController();
-
-    (async () => {
-      setLoading(true);
-      try {
-        const query = buildQuery(Math.round(radiusMiles * METERS_PER_MILE));
-        const data = await queryOverpass(query, controller.signal);
-        let parsed = parseElements(data.elements || []);
-
-        if (parsed.length === 0) {
-          throw new Error('Zero live results');
-        }
-
-        cacheRef.current.set(radiusMiles, parsed);
-        setAllPlaces(parsed);
-      } catch (err) {
-        if (err.name !== 'AbortError') {
-          // Merge dynamic fallback with radius bounds
-          const fallback = SEED_CAMPUS_PLACES.filter((p) => p.distance <= radiusMiles);
-          setAllPlaces(fallback);
-        }
-      } finally {
-        if (!controller.signal.aborted) setLoading(false);
-      }
-    })();
-
-    return () => controller.abort();
+  // Aggregate badge counts across the active radius
+  const counts = useMemo(() => {
+    const inRadius = allMockPlaces.filter((p) => p.distanceMiles <= radiusMiles);
+    return {
+      all: inRadius.length,
+      gold: inRadius.filter((p) => p.category === 'housing' && p.tier === 'Gold Standard').length,
+      green: inRadius.filter((p) => p.category === 'housing' && p.tier === 'Green Standard').length,
+      housing: inRadius.filter((p) => p.category === 'housing').length,
+      food: inRadius.filter((p) => p.category === 'hub' || p.category === 'food').length,
+    };
   }, [radiusMiles]);
 
-  // Client-side filtering
-  const filteredPlaces = useMemo(() => {
-    return allPlaces.filter((p) => {
-      if (filterType === 'all') return true;
-      if (filterType === 'food') return p.category === 'food';
-      if (filterType === 'housing') return p.category === 'housing';
-      if (filterType === 'gold') return p.tier === 'Gold Standard';
-      if (filterType === 'green') return p.tier === 'Green Standard';
-      return true;
-    });
-  }, [allPlaces, filterType]);
+  // Clear selection if filtered out of view
+  useEffect(() => {
+    if (selectedSpot && selectedSpot.distanceMiles > radiusMiles) {
+      setSelectedSpot(null);
+    }
+  }, [radiusMiles, selectedSpot]);
 
-  const counts = useMemo(
-    () => ({
-      gold: allPlaces.filter((p) => p.tier === 'Gold Standard').length,
-      green: allPlaces.filter((p) => p.tier === 'Green Standard').length,
-      generalHousing: allPlaces.filter((p) => p.category === 'housing' && p.tier === 'General Housing').length,
-      food: allPlaces.filter((p) => p.category === 'food').length,
-    }),
-    [allPlaces]
-  );
+  const milesLabel = (n) => `${n} ${n === 1 ? 'mile' : 'miles'}`;
 
   return (
     <main style={{ padding: '20px', fontFamily: 'sans-serif' }}>
       <header style={{ marginBottom: '16px' }}>
-        <button type="button" onClick={onNavigateBack} style={{ marginBottom: '8px', cursor: 'pointer' }}>
+        <button
+          type="button"
+          onClick={onNavigateBack}
+          style={{ marginBottom: '8px', cursor: 'pointer' }}
+        >
           &larr; Back to Home
         </button>
-        <h1>UniVerse Dynamic Campus, Housing &amp; Food Explorer</h1>
-        <p>Live map tack view within {radiusMiles} miles of UNC Charlotte with Gold &amp; Green Standard tagging.</p>
+        <h1>UniVerse Campus, Housing &amp; Food Explorer</h1>
+        <p>Verified off-campus living and dining hubs within {milesLabel(radiusMiles)} of UNC Charlotte.</p>
       </header>
 
       {/* Control Bar */}
@@ -309,32 +130,35 @@ export default function HousingMap({ onNavigateBack }) {
         }}
       >
         <label htmlFor="radius">
-          Radius: <strong>{sliderMiles} miles</strong>
+          Radius: <strong>{milesLabel(radiusMiles)}</strong>
         </label>
         <input
           id="radius"
           type="range"
           min={MIN_MILES}
           max={MAX_MILES}
-          value={sliderMiles}
-          onChange={(e) => setSliderMiles(Number(e.target.value))}
+          value={radiusMiles}
+          onChange={(e) => setRadiusMiles(Number(e.target.value))}
           style={{ cursor: 'pointer' }}
         />
 
         <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
           {[
-            { id: 'all', label: 'All' },
+            { id: 'all', label: `All (${counts.all})` },
             { id: 'gold', label: `Gold Standard (${counts.gold})` },
             { id: 'green', label: `Green Standard (${counts.green})` },
-            { id: 'housing', label: `All Housing (${counts.gold + counts.green + counts.generalHousing})` },
-            { id: 'food', label: `Food (${counts.food})` },
+            { id: 'housing', label: `All Housing (${counts.housing})` },
+            { id: 'food', label: `Dining & Hubs (${counts.food})` },
           ].map((tab) => (
             <button
               key={tab.id}
               type="button"
-              onClick={() => setFilterType(tab.id)}
+              onClick={() => {
+                setFilterType(tab.id);
+                setSelectedSpot(null);
+              }}
               style={{
-                padding: '4px 10px',
+                padding: '5px 12px',
                 borderRadius: '4px',
                 border: 'none',
                 background: filterType === tab.id ? '#d4af37' : '#fff',
@@ -348,14 +172,22 @@ export default function HousingMap({ onNavigateBack }) {
           ))}
         </div>
 
-        <span style={{ marginLeft: 'auto', fontSize: '0.85rem' }}>
-          {loading ? 'Fetching dynamic places...' : `${filteredPlaces.length} locations visible`}
+        <span style={{ marginLeft: 'auto', fontSize: '0.9rem' }}>
+          {places.length} locations visible
         </span>
       </section>
 
-      {/* Map + Sidebar Layout */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '16px', height: '620px' }}>
-        <div style={{ position: 'relative', height: '100%', borderRadius: '8px', overflow: 'hidden', border: '1px solid #ccc' }}>
+      {/* Map & Inspector Layout */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: '16px', height: '620px' }}>
+        <div
+          style={{
+            position: 'relative',
+            height: '100%',
+            borderRadius: '8px',
+            overflow: 'hidden',
+            border: '1px solid #ccc',
+          }}
+        >
           <MapContainer
             center={[CAMPUS_CENTER.lat, CAMPUS_CENTER.lng]}
             zoom={13}
@@ -376,22 +208,26 @@ export default function HousingMap({ onNavigateBack }) {
             />
 
             <Marker position={[CAMPUS_CENTER.lat, CAMPUS_CENTER.lng]}>
-              <Popup>UNC Charlotte Main Campus</Popup>
+              <Popup>UNC Charlotte Main Campus (Student Union)</Popup>
             </Marker>
 
-            {filteredPlaces.map((spot) => (
+            {places.map((place) => (
               <Marker
-                key={spot.id}
-                position={[spot.lat, spot.lng]}
-                icon={makeIcon(spot.category, spot.tier, selectedSpot?.id === spot.id)}
-                eventHandlers={{ click: () => setSelectedSpot(spot) }}
+                key={place.id}
+                position={[place.lat, place.lng]}
+                icon={makeIcon(place, selectedSpot?.id === place.id)}
+                eventHandlers={{ click: () => setSelectedSpot(place) }}
               >
                 <Popup>
-                  <strong>{spot.name}</strong>
+                  <strong>{place.name}</strong>
                   <br />
-                  <span>{spot.tier || (spot.category === 'food' ? 'Dining' : 'Housing')}</span>
+                  <span>
+                    {place.category === 'hub'
+                      ? 'Dining Plaza / Hub'
+                      : place.tier || 'Food & Dining'}
+                  </span>
                   <br />
-                  <small>{spot.distance.toFixed(1)} mi from campus</small>
+                  <small>{place.distanceMiles.toFixed(2)} mi from campus</small>
                 </Popup>
               </Marker>
             ))}
@@ -408,58 +244,161 @@ export default function HousingMap({ onNavigateBack }) {
             overflowY: 'auto',
           }}
         >
-          <h2 style={{ marginTop: 0 }}>Spot Inspector</h2>
+          <h2 style={{ marginTop: 0, fontSize: '1.25rem' }}>Spot Inspector</h2>
+
           {selectedSpot ? (
             <div style={{ marginBottom: '16px' }}>
-              <h3>{selectedSpot.name}</h3>
+              <h3 style={{ margin: '4px 0' }}>{selectedSpot.name}</h3>
 
-              {selectedSpot.tier && selectedSpot.tier !== 'General Housing' && (
-                <span
-                  style={{
-                    display: 'inline-block',
-                    padding: '3px 8px',
-                    borderRadius: '4px',
-                    fontSize: '0.8rem',
-                    fontWeight: 'bold',
-                    color: '#fff',
-                    background: selectedSpot.tier === 'Gold Standard' ? '#ca8a04' : '#15803d',
-                    marginBottom: '8px',
-                  }}
-                >
-                  UNCC {selectedSpot.tier}
-                </span>
+              {selectedSpot.category === 'housing' && (
+                <div style={{ margin: '6px 0 10px' }}>
+                  <span
+                    style={{
+                      display: 'inline-block',
+                      padding: '3px 8px',
+                      borderRadius: '4px',
+                      fontSize: '0.75rem',
+                      fontWeight: 'bold',
+                      color: '#fff',
+                      background:
+                        selectedSpot.tier === 'Gold Standard'
+                          ? '#ca8a04'
+                          : selectedSpot.tier === 'Green Standard'
+                          ? '#15803d'
+                          : '#2563eb',
+                    }}
+                  >
+                    UNCC {selectedSpot.tier}
+                  </span>
+                  {selectedSpot.walkable && (
+                    <span
+                      style={{
+                        display: 'inline-block',
+                        marginLeft: '6px',
+                        padding: '3px 8px',
+                        borderRadius: '4px',
+                        fontSize: '0.75rem',
+                        fontWeight: 'bold',
+                        color: '#0b3d2e',
+                        background: '#e0ece4',
+                      }}
+                    >
+                      Walkable to Class
+                    </span>
+                  )}
+                </div>
               )}
 
-              <p><strong>Distance:</strong> {selectedSpot.distance.toFixed(1)} miles from campus</p>
-              <p><strong>Address:</strong> {selectedSpot.address}</p>
-              {selectedSpot.cuisine && <p><strong>Cuisine:</strong> {selectedSpot.cuisine}</p>}
+              {selectedSpot.category === 'hub' && (
+                <div style={{ margin: '6px 0 10px' }}>
+                  <span
+                    style={{
+                      display: 'inline-block',
+                      padding: '3px 8px',
+                      borderRadius: '4px',
+                      fontSize: '0.75rem',
+                      fontWeight: 'bold',
+                      color: '#fff',
+                      background: '#7c3aed',
+                    }}
+                  >
+                    Commercial Food Hub ({selectedSpot.tenants.length} Spots)
+                  </span>
+                </div>
+              )}
+
+              <p style={{ margin: '4px 0', fontSize: '0.9rem' }}>
+                <strong>Distance:</strong> {selectedSpot.distanceMiles.toFixed(2)} mi from campus
+              </p>
+              <p style={{ margin: '4px 0', fontSize: '0.9rem' }}>
+                <strong>Address:</strong> {selectedSpot.address}
+              </p>
+
+              {selectedSpot.summary && (
+                <p style={{ margin: '8px 0', fontSize: '0.85rem', color: '#444' }}>
+                  {selectedSpot.summary}
+                </p>
+              )}
+
+              {selectedSpot.description && (
+                <p style={{ margin: '8px 0', fontSize: '0.85rem', color: '#444' }}>
+                  {selectedSpot.description}
+                </p>
+              )}
+
+              {/* Renders multi-tenant list for food plazas */}
+              {selectedSpot.category === 'hub' && selectedSpot.tenants && (
+                <div style={{ marginTop: '12px' }}>
+                  <h4 style={{ margin: '0 0 6px 0', fontSize: '0.95rem' }}>Eateries &amp; Shops Inside:</h4>
+                  <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                    {selectedSpot.tenants.map((tenant, idx) => (
+                      <li
+                        key={idx}
+                        style={{
+                          padding: '6px 8px',
+                          marginBottom: '4px',
+                          background: '#fff',
+                          border: '1px solid #e5e5e5',
+                          borderRadius: '4px',
+                          fontSize: '0.85rem',
+                        }}
+                      >
+                        <strong>{tenant.name}</strong>
+                        <br />
+                        <span style={{ color: '#666' }}>{tenant.cuisine}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {selectedSpot.category === 'food' && (
+                <p style={{ margin: '4px 0', fontSize: '0.9rem' }}>
+                  <strong>Cuisine:</strong> {selectedSpot.cuisine}
+                </p>
+              )}
             </div>
           ) : (
-            <p style={{ color: '#666' }}>Click any tack on the map or select from the list below.</p>
+            <p style={{ color: '#666', fontSize: '0.9rem' }}>
+              Click any tack pin on the map or pick from the list below.
+            </p>
           )}
 
-          <h4 style={{ borderTop: '1px solid #ddd', paddingTop: '12px' }}>Places in Radius ({filteredPlaces.length})</h4>
+          <h4 style={{ borderTop: '1px solid #ddd', paddingTop: '12px', marginTop: '12px' }}>
+            Locations in View ({places.length})
+          </h4>
           <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-            {filteredPlaces.slice(0, 50).map((spot) => (
-              <li key={spot.id}>
+            {places.map((place) => (
+              <li key={place.id}>
                 <button
                   type="button"
-                  onClick={() => setSelectedSpot(spot)}
+                  onClick={() => setSelectedSpot(place)}
                   style={{
                     width: '100%',
                     textAlign: 'left',
-                    padding: '6px 4px',
+                    padding: '8px 6px',
                     border: 'none',
                     borderBottom: '1px solid #eee',
-                    background: selectedSpot?.id === spot.id ? '#e8f1ec' : 'transparent',
+                    background: selectedSpot?.id === place.id ? '#e8f1ec' : 'transparent',
                     cursor: 'pointer',
+                    fontSize: '0.85rem',
                   }}
                 >
                   <span>
-                    {spot.tier === 'Gold Standard' ? '⭐ ' : spot.tier === 'Green Standard' ? '🌿 ' : spot.category === 'food' ? '🍔 ' : '🏠 '}
-                    {spot.name}
+                    {place.category === 'hub'
+                      ? '🏬 '
+                      : place.tier === 'Gold Standard'
+                      ? '⭐ '
+                      : place.tier === 'Green Standard'
+                      ? '🌿 '
+                      : place.category === 'food'
+                      ? '🍔 '
+                      : '🏠 '}
+                    <strong>{place.name}</strong>
                   </span>
-                  <span style={{ float: 'right', color: '#666' }}>{spot.distance.toFixed(1)} mi</span>
+                  <span style={{ float: 'right', color: '#666' }}>
+                    {place.distanceMiles.toFixed(2)} mi
+                  </span>
                 </button>
               </li>
             ))}
