@@ -1,5 +1,6 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import './CourseCatalogPage.css';
+import PrereqTreeViewer from './PrereqTreeViewer';
 import {
   mockDepartments,
   mockCourses,
@@ -1329,63 +1330,20 @@ function SavedPlansView({
         </div>
       </div>
 
-      {/* ---- Prerequisite Chain Tree (placeholder — not yet implemented) ---- */}
+      {/* ---- Prerequisite Chain Tree ---- */}
       <div className="plan-section">
         <div className="plan-section-header">
           <h3 className="plan-section-title">Prerequisite Chain Tree</h3>
-          <span className="plan-prereq-badge">Coming Soon</span>
+          <span className="plan-section-count">
+            {planEntries.length} course{planEntries.length !== 1 ? 's' : ''} in plan
+          </span>
         </div>
-        <div className="plan-prereq-tree-placeholder">
-          {/*
-           * TODO: Implement the prerequisite chain visualizer.
-           *
-           * This area will render a dynamic directed-acyclic-graph (DAG) or layered
-           * tree diagram showing every prerequisite chain for all courses currently
-           * in the plan.
-           *
-           * Implementation notes:
-           * - For each course in planEntries, recursively resolve its full prerequisite
-           *   chain via GET /api/courses/:course_id/prerequisites (or the existing
-           *   apiFetchPrerequisites stub).
-           * - Merge all chains into a single dependency graph (nodes = courses, edges
-           *   = prerequisite relationships).
-           * - Render using an SVG-based layout (e.g. dagre-d3, react-flow, or a custom
-           *   topological-sort layout).
-           * - Highlight courses already in the plan vs. missing prerequisites.
-           * - Clicking a node should expand its details or link to the course in the
-           *   All Courses tab.
-           *
-           * Data shape already in place:
-           *   prerequisites table: { course_id: string, required_course_id: string }
-           *   apiFetchPrerequisites(courseId) → Course[]
-           */}
-          <div className="plan-prereq-tree-stub" aria-label="Prerequisite tree placeholder">
-            <div className="plan-prereq-stub-header">
-              Prerequisite Tree — not yet implemented
-            </div>
-            <p className="plan-prereq-stub-body">
-              Once implemented, this panel will show a live dependency graph for every course in
-              your plan — visualizing which courses must be completed first, and flagging any
-              missing prerequisites.
-            </p>
-            {planEntries.length > 0 && (
-              <div className="plan-prereq-stub-courses">
-                <span className="course-meta-label">Courses in plan:</span>
-                <div className="course-tag-group" style={{ marginTop: '6px' }}>
-                  {planEntries.map((e) => {
-                    const c = e._course ?? courseMap[e.course_id];
-                    if (!c) return null;
-                    return (
-                      <span key={e.entry_id} className="course-prereq-tag">
-                        {c.alpha_code} {c.numeric_code}
-                      </span>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
+        <p className="plan-section-desc">
+          Visual map of every course in your plan and its prerequisite chain. Courses shown with a
+          dashed border are required prerequisites that are not yet in your plan. Click any node
+          to inspect it; scroll and drag to navigate.
+        </p>
+        <PrereqTreeViewer planEntries={planEntries} courseMap={courseMap} />
       </div>
     </section>
   );
