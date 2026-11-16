@@ -1,0 +1,293 @@
+/* ============================================================
+   PrereqTreeViewer Stylesheet
+   Theme: UNC Charlotte Niner Green & Gold
+   ============================================================ */
+
+/* ---- Outer container ---- */
+.prereq-tree-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--white);
+}
+
+/* ---- Toolbar ---- */
+.prereq-tree-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 16px;
+  background: var(--off-white);
+  border-bottom: 1px solid var(--border-color);
+  flex-wrap: wrap;
+}
+
+.prereq-tree-toolbar-hint {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.prereq-tree-toolbar-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.prereq-tree-ctrl-btn {
+  background: var(--white);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  line-height: 1.4;
+  transition: background-color 0.12s, border-color 0.12s;
+}
+
+.prereq-tree-ctrl-btn:hover {
+  background: var(--off-white);
+  border-color: var(--niner-green);
+  color: var(--niner-green);
+}
+
+.prereq-tree-ctrl-btn--reset {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.prereq-tree-ctrl-btn--clear {
+  font-size: 12px;
+  font-weight: 500;
+  color: #7A2D2D;
+  border-color: #AA4A4A;
+}
+
+.prereq-tree-ctrl-btn--clear:hover {
+  background: #FFF5F5;
+  border-color: #7A2D2D;
+  color: #7A2D2D;
+}
+
+/* ---- SVG Canvas ---- */
+.prereq-tree-canvas {
+  overflow: auto;
+  min-height: 320px;
+  max-height: 580px;
+  background: #FAFAF8;
+  user-select: none;
+  -webkit-user-select: none;
+  position: relative;
+}
+
+.prereq-tree-canvas svg {
+  display: block;
+}
+
+/* ---- Edges ---- */
+.prereq-edge {
+  fill: none;
+  stroke: #005035;
+  stroke-width: 2;
+  transition: stroke 0.15s, opacity 0.15s;
+}
+
+.prereq-edge--dim {
+  stroke: #C0C0BC;
+  opacity: 0.35;
+}
+
+.prereq-edge--focused {
+  stroke: #005035;
+  stroke-width: 2.5;
+}
+
+/* ---- Nodes ---- */
+.prereq-node {
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.prereq-node:focus {
+  outline: none; /* handled via rect stroke */
+}
+
+.prereq-node--dim {
+  opacity: 0.28;
+}
+
+.prereq-node-rect {
+  transition: stroke 0.12s, stroke-width 0.12s;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.12));
+}
+
+.prereq-node--selected .prereq-node-rect {
+  filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.6));
+}
+
+.prereq-node--phantom .prereq-node-rect {
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.08));
+}
+
+.prereq-node-code {
+  font-family: var(--sans, system-ui, sans-serif);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  pointer-events: none;
+}
+
+.prereq-node-title {
+  font-family: var(--sans, system-ui, sans-serif);
+  font-size: 9.5px;
+  font-weight: 400;
+  pointer-events: none;
+}
+
+/* ---- Detail panel ---- */
+.prereq-tree-detail {
+  padding: 14px 18px;
+  border-top: 1px solid var(--border-color);
+  background: var(--white);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.prereq-tree-detail-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.prereq-tree-detail-badge {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 4px;
+  letter-spacing: 0.3px;
+}
+
+.prereq-tree-detail-sem {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.prereq-tree-detail-phantom {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.prereq-tree-detail-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.4;
+}
+
+.prereq-tree-detail-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  max-width: 760px;
+}
+
+.prereq-tree-detail-meta {
+  font-size: 12px;
+  color: var(--text-muted);
+  display: flex;
+  gap: 4px;
+}
+
+.prereq-tree-detail-prereqs {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.prereq-tree-detail-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.prereq-tree-detail-link {
+  background: none;
+  border: 1px solid var(--niner-green);
+  color: var(--niner-green);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background-color 0.12s;
+}
+
+.prereq-tree-detail-link:hover {
+  background: var(--niner-green);
+  color: var(--white);
+}
+
+/* ---- Legend ---- */
+.prereq-tree-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--border-color);
+  background: var(--off-white);
+}
+
+.prereq-tree-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.prereq-tree-legend-swatch {
+  display: inline-block;
+  width: 18px;
+  height: 14px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.prereq-tree-legend-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+/* ---- Empty state ---- */
+.prereq-tree-empty {
+  padding: 32px 20px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 14px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--white);
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 600px) {
+  .prereq-tree-canvas {
+    min-height: 240px;
+    max-height: 420px;
+  }
+
+  .prereq-tree-toolbar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}
