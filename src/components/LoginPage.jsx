@@ -56,13 +56,26 @@ export default function LoginPage({ initialMode = 'login', onNavigateToLanding, 
       }
       console.log('Sign Up submitted:', { fullName, email, password });
       if (onAuthSuccess) {
-        onAuthSuccess({ fullName, email });
+        onAuthSuccess({
+          user_id: 1,
+          id: 1,
+          fullName,
+          display_name: fullName,
+          email,
+        });
       }
     } else {
       console.log('Sign In submitted:', { email, password });
 
       if (onAuthSuccess) {
-        onAuthSuccess({ email, fullName: fullName || email.split('@')[0] });
+        const name = fullName || email.split('@')[0];
+        onAuthSuccess({
+          user_id: 1,
+          id: 1,
+          email,
+          fullName: name,
+          display_name: name,
+        });
       }
     }
   };

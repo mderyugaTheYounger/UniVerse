@@ -184,3 +184,85 @@ export function createCoursePlanDB(config?: PoolConfig | string | Pool): Kysely<
     }),
   });
 }
+
+// ============================================================================
+// Query Helper Functions
+// ============================================================================
+
+/**
+ * Retrieves saved course plan entries for a specific user, ordered by academic year and entry ID.
+ *
+ * @param db - Kysely CoursePlanDatabase instance
+ * @param userId - Target user identifier
+ * @returns Array of CoursePlanEntry records
+ */
+export async function getPlanEntriesByUserId(
+  db: Kysely<CoursePlanDatabase>,
+  userId: number
+): Promise<CoursePlanEntry[]> {
+  return await db
+    .selectFrom('course_plan_entries')
+    .selectAll()
+    .where('user_id', '=', userId)
+    .orderBy('plan_year', 'asc')
+    .orderBy('entry_id', 'asc')
+    .execute();
+}
+
+/**
+ * Inserts a new course plan entry for a user.
+ *
+ * @param db - Kysely CoursePlanDatabase instance
+ * @param entry - New course plan entry values
+ * @returns The persisted CoursePlanEntry row
+ */
+export async function createPlanEntry(
+  db: Kysely<CoursePlanDatabase>,
+  entry: NewCoursePlanEntry
+): Promise<CoursePlanEntry> {
+  return await db
+    .insertInto('course_plan_entries')
+    .values(entry)
+    .returningAll()
+    .executeTakeFirstOrThrow();
+}
+
+/**
+ * Updates an existing course plan entry by entry ID (e.g. moving year/semester or editing notes).
+ *
+ * @param db - Kysely CoursePlanDatabase instance
+ * @param entryId - Target entry ID
+ * @param update - Fields to update
+ * @returns The updated CoursePlanEntry row or undefined if not found
+ */
+export async function updatePlanEntry(
+  db: Kysely<CoursePlanDatabase>,
+  entryId: number,
+  update: CoursePlanEntryUpdate
+): Promise<CoursePlanEntry | undefined> {
+  return await db
+    .updateTable('course_plan_entries')
+    .set(update)
+    .where('entry_id', '=', entryId)
+    .returningAll()
+    .executeTakeFirst();
+}
+
+/**
+ * Deletes a course plan entry by entry ID.
+ *
+ * @param db - Kysely CoursePlanDatabase instance
+ * @param entryId - Target entry ID
+ * @returns True if a record was deleted, false otherwise
+ */
+export async function deletePlanEntry(
+  db: Kysely<CoursePlanDatabase>,
+  entryId: number
+): Promise<boolean> {
+  const result = await db
+    .deleteFrom('course_plan_entries')
+    .where('entry_id', '=', entryId)
+    .executeTakeFirst();
+  return Number(result.numDeletedRows) > 0;
+}
+
