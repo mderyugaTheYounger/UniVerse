@@ -122,7 +122,7 @@ function courseApiPlugin() {
           // GET /api/plan?user_id=
           if (method === 'GET' && pathname === '/api/plan') {
             const userId = url.searchParams.get('user_id');
-            const entries = userId
+            const entries = userId && userId !== 'undefined' && userId !== 'null'
               ? inMemoryPlanEntries.filter((e) => String(e.user_id) === String(userId))
               : inMemoryPlanEntries;
             return sendJson(200, entries);
@@ -140,6 +140,12 @@ function courseApiPlugin() {
               notes: body.notes || null,
               created_at: new Date().toISOString(),
             };
+            const existingIndex = inMemoryPlanEntries.findIndex(
+              (e) => String(e.user_id) === String(newEntry.user_id) && e.course_id === newEntry.course_id
+            );
+            if (existingIndex !== -1) {
+              return sendJson(200, inMemoryPlanEntries[existingIndex]);
+            }
             inMemoryPlanEntries.push(newEntry);
             return sendJson(201, newEntry);
           }

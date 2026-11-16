@@ -476,12 +476,30 @@ export default function CourseCatalogPage({
       .finally(() => setLoadingMinors(false));
   }, [activeTab, minorsData.length]);
 
-  // Load saved plan when that tab becomes active (requires login)
+  // Load saved plan when that tab becomes active
   useEffect(() => {
-    if (activeTab !== 'plans' || !currentUser) return;
-    setPlanLoading(true);
-    apiFetchPlan(currentUser.user_id ?? currentUser.id)
-      .then(setPlanEntries)
+    if (activeTab !== 'plans') return;
+    const userId = currentUser ? (currentUser.user_id ?? currentUser.id ?? 1) : 1;
+    if (planEntries.length === 0) {
+      setPlanLoading(true);
+    }
+    apiFetchPlan(userId)
+      .then((serverEntries) => {
+        if (!Array.isArray(serverEntries)) return;
+        setPlanEntries((prev) => {
+          const serverMap = new Map(serverEntries.map((e) => [e.course_id, e]));
+          const localOnly = prev.filter((e) => !serverMap.has(e.course_id));
+          const merged = serverEntries.map((e) => {
+            const existing = prev.find((p) => p.course_id === e.course_id);
+            return {
+              ...e,
+              _course: existing?._course ?? courseMap[e.course_id],
+            };
+          });
+          return [...merged, ...localOnly];
+        });
+      })
+      .catch((err) => console.warn('Failed to load plan entries:', err))
       .finally(() => setPlanLoading(false));
   }, [activeTab, currentUser]);
 
@@ -494,37 +512,49 @@ export default function CourseCatalogPage({
 
   /**
    * Called from the course list "Add to Plan" button.
-   * If not logged in, shows the login prompt; otherwise adds to unassigned bucket.
+   * Saves course to the unassigned bucket and switches to the plans tab.
    */
   const handleAddToPlan = useCallback(
     (course) => {
-      if (!currentUser) {
-        setLoginPromptCourse(course);
-        return;
-      }
       // Check for duplicate
       if (planEntries.some((e) => e.course_id === course.course_id)) return;
+
+      const userId = currentUser ? (currentUser.user_id ?? currentUser.id ?? 1) : 1;
       const optimistic = {
         entry_id: `tmp-${Date.now()}`,
-        user_id: currentUser.user_id ?? currentUser.id,
+        user_id: userId,
         course_id: course.course_id,
         plan_year: 0,
         plan_semester: 'unassigned',
         notes: null,
         _course: course,  // local denormalized ref for display
       };
+
       setPlanEntries((prev) => [...prev, optimistic]);
+
       apiSavePlanEntry({
         user_id: optimistic.user_id,
         course_id: course.course_id,
         plan_year: 0,
         plan_semester: 'unassigned',
         notes: null,
-      }).then((saved) => {
-        setPlanEntries((prev) =>
-          prev.map((e) => (e.entry_id === optimistic.entry_id ? { ...saved, _course: course } : e))
-        );
-      });
+      })
+        .then((saved) => {
+          setPlanEntries((prev) => {
+            const hasOptimistic = prev.some((e) => e.entry_id === optimistic.entry_id);
+            if (hasOptimistic) {
+              return prev.map((e) =>
+                e.entry_id === optimistic.entry_id ? { ...saved, _course: course } : e
+              );
+            }
+            if (!prev.some((e) => e.course_id === course.course_id)) {
+              return [...prev, { ...saved, _course: course }];
+            }
+            return prev;
+          });
+        })
+        .catch((err) => console.error('Failed to save plan entry to API:', err));
+
       // Switch to plans tab so user can see the result
       setActiveTab('plans');
     },
@@ -562,13 +592,18 @@ export default function CourseCatalogPage({
     searchQuery.trim() !== '',
   ].filter(Boolean).length;
 
-  // Courses lookup map for plan display (merge API list + mock fallback)
+  // Courses lookup map for plan display (merge API list + mock fallback + plan entry refs)
   const courseMap = useMemo(() => {
     const map = {};
     mockCourses.forEach((c) => { map[c.course_id] = c; });
     courses.forEach((c) => { map[c.course_id] = c; });
+    planEntries.forEach((e) => {
+      if (e._course && e._course.course_id) {
+        map[e._course.course_id] = e._course;
+      }
+    });
     return map;
-  }, [courses]);
+  }, [courses, planEntries]);
 
   return (
     <div className="catalog-page">
