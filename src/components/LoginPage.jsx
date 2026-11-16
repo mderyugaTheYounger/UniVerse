@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { GoogleLogin } from '@react-oauth/google';
 
 export default function LoginPage({ initialMode = 'login', onNavigateToLanding, onSwitchMode, onAuthSuccess }) {
   // 'login' (Sign In) or 'register' (Sign Up)
@@ -12,6 +13,8 @@ export default function LoginPage({ initialMode = 'login', onNavigateToLanding, 
   const [fullName, setFullName] = useState('');
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [emailError, setEmailError] = useState('');
+  const [oauthError, setOauthError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   // Restrict to university email domains
   const isValidCampusEmail = (val) => {
@@ -32,9 +35,48 @@ export default function LoginPage({ initialMode = 'login', onNavigateToLanding, 
   const handleToggleMode = (registering) => {
     setInternalMode(registering ? 'register' : 'login');
     setEmailError('');
+    setOauthError('');
     if (onSwitchMode) {
       onSwitchMode(registering ? 'register' : 'login');
     }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    try {
+      setIsLoading(true);
+      setOauthError('');
+
+      const res = await fetch('/api/auth/google', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ credential: credentialResponse.credential }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Google authentication failed.');
+      }
+
+      if (data.token) {
+        localStorage.setItem('universe_auth_token', data.token);
+      }
+
+      if (onAuthSuccess) {
+        onAuthSuccess(data.user);
+      }
+    } catch (err) {
+      console.error('OAuth sign in error:', err);
+      setOauthError(err.message || 'Unable to sign in with Google. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleError = () => {
+    setOauthError('Google sign in was closed or failed to connect.');
   };
 
   const handleSubmit = (e) => {
@@ -93,6 +135,39 @@ export default function LoginPage({ initialMode = 'login', onNavigateToLanding, 
             : 'Access your saved housing bookmarks, roommate chats, and academic plans.'}
         </p>
       </header>
+
+      {/* Google OAuth Section */}
+      <section style={{ margin: '1.5rem auto', maxWidth: '400px', textAlign: 'center' }}>
+        <p style={{ fontWeight: 600, marginBottom: '0.75rem', color: '#005035' }}>
+          Recommended: Sign in with your UNC Charlotte Account
+        </p>
+        <div style={{ display: 'flex', justifyContent: 'center' }}>
+          <GoogleLogin
+            onSuccess={handleGoogleSuccess}
+            onError={handleGoogleError}
+            useOneTap
+            theme="filled_blue"
+            size="large"
+            text={isRegistering ? 'signup_with' : 'signin_with'}
+            shape="rectangular"
+          />
+        </div>
+        {isLoading && (
+          <p role="status" style={{ color: '#005035', marginTop: '0.75rem', fontSize: '0.9rem' }}>
+            Verifying campus student credentials...
+          </p>
+        )}
+        {oauthError && (
+          <p role="alert" style={{ color: '#d32f2f', marginTop: '0.75rem', fontSize: '0.9rem', fontWeight: 600 }}>
+            {oauthError}
+          </p>
+        )}
+        <div style={{ display: 'flex', alignItems: 'center', width: '100%', margin: '1.5rem 0' }}>
+          <hr style={{ flex: 1, border: 'none', borderTop: '1px solid #ccc' }} />
+          <span style={{ padding: '0 0.75rem', color: '#666', fontSize: '0.85rem' }}>or use password</span>
+          <hr style={{ flex: 1, border: 'none', borderTop: '1px solid #ccc' }} />
+        </div>
+      </section>
 
       <section>
         <form onSubmit={handleSubmit}>

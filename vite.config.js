@@ -17,7 +17,12 @@ function courseApiPlugin() {
     name: 'course-api-plugin',
     configureServer(server) {
       server.middlewares.use(async (req, res, next) => {
-        if (!req.url || !req.url.startsWith('/api/')) {
+        if (
+          !req.url ||
+          !req.url.startsWith('/api/') ||
+          req.url.startsWith('/api/auth') ||
+          req.url.startsWith('/api/health')
+        ) {
           return next();
         }
 
@@ -197,4 +202,16 @@ function courseApiPlugin() {
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), courseApiPlugin()],
+  server: {
+    proxy: {
+      '/api/auth': {
+        target: 'http://localhost:5001',
+        changeOrigin: true,
+      },
+      '/api/health': {
+        target: 'http://localhost:5001',
+        changeOrigin: true,
+      },
+    },
+  },
 });
