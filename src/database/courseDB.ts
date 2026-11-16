@@ -397,3 +397,145 @@ export function createCourseDB(config?: PoolConfig | string | Pool): Kysely<Cour
     }),
   });
 }
+
+// ============================================================================
+// Query Helper Functions
+// ============================================================================
+
+export interface CourseFilterOptions {
+  /** Filter by department alpha code (e.g. 'ITSC') */
+  department?: string;
+  /** Filter by numeric course level (e.g. '1000', '2000') */
+  level?: string;
+  /** Filter by exact credit hours */
+  credits?: number;
+  /** Search query across title, description, and department/code */
+  q?: string;
+}
+
+/**
+ * Retrieves all academic departments ordered by alpha code.
+ *
+ * @param db - Kysely CourseDatabase instance
+ * @returns Array of Department records
+ */
+export async function getDepartments(db: Kysely<CourseDatabase>): Promise<Department[]> {
+  return await db.selectFrom('departments').selectAll().orderBy('alpha_code', 'asc').execute();
+}
+
+/**
+ * Retrieves courses with optional server-side filtering by department, level, credits, or search term.
+ *
+ * @param db - Kysely CourseDatabase instance
+ * @param filters - Optional CourseFilterOptions
+ * @returns Array of filtered Course records
+ */
+export async function getCourses(
+  db: Kysely<CourseDatabase>,
+  filters: CourseFilterOptions = {}
+): Promise<Course[]> {
+  let query = db.selectFrom('courses').selectAll();
+
+  if (filters.department && filters.department !== 'ALL') {
+    query = query.where('alpha_code', '=', filters.department);
+  }
+  if (filters.level && filters.level !== 'ALL') {
+    query = query.where('numeric_code', 'like', `${filters.level.charAt(0)}%`);
+  }
+  if (filters.credits !== undefined && filters.credits !== null && String(filters.credits) !== 'ALL') {
+    query = query.where('credit_hours', '=', Number(filters.credits));
+  }
+  if (filters.q && filters.q.trim() !== '') {
+    const term = `%${filters.q.trim().toLowerCase()}%`;
+    query = query.where((eb) =>
+      eb.or([
+        sql<boolean>`lower(title) like ${term}`,
+        sql<boolean>`lower(description) like ${term}`,
+        sql<boolean>`lower(concat(alpha_code, ' ', numeric_code)) like ${term}`,
+      ])
+    );
+  }
+
+  return await query.orderBy('alpha_code', 'asc').orderBy('numeric_code', 'asc').execute();
+}
+
+/**
+ * Retrieves prerequisite courses for a specified course ID.
+ *
+ * @param db - Kysely CourseDatabase instance
+ * @param courseId - Target course UUID
+ * @returns Array of required prerequisite Course records
+ */
+export async function getPrerequisitesForCourse(
+  db: Kysely<CourseDatabase>,
+  courseId: string
+): Promise<Course[]> {
+  return await db
+    .selectFrom('prerequisites')
+    .innerJoin('courses', 'courses.course_id', 'prerequisites.required_course_id')
+    .where('prerequisites.course_id', '=', courseId)
+    .selectAll('courses')
+    .orderBy('courses.numeric_code', 'asc')
+    .execute();
+}
+
+/**
+ * Retrieves all academic majors ordered by title.
+ *
+ * @param db - Kysely CourseDatabase instance
+ * @returns Array of Major records
+ */
+export async function getMajors(db: Kysely<CourseDatabase>): Promise<Major[]> {
+  return await db.selectFrom('majors').selectAll().orderBy('title', 'asc').execute();
+}
+
+/**
+ * Retrieves all courses required for a given major ID.
+ *
+ * @param db - Kysely CourseDatabase instance
+ * @param majorId - Target major UUID
+ * @returns Array of required Course records
+ */
+export async function getCoursesForMajor(
+  db: Kysely<CourseDatabase>,
+  majorId: string
+): Promise<Course[]> {
+  return await db
+    .selectFrom('major_requirements')
+    .innerJoin('courses', 'courses.course_id', 'major_requirements.course_id')
+    .where('major_requirements.major_id', '=', majorId)
+    .selectAll('courses')
+    .orderBy('courses.numeric_code', 'asc')
+    .execute();
+}
+
+/**
+ * Retrieves all academic minors ordered by title.
+ *
+ * @param db - Kysely CourseDatabase instance
+ * @returns Array of Minor records
+ */
+export async function getMinors(db: Kysely<CourseDatabase>): Promise<Minor[]> {
+  return await db.selectFrom('minors').selectAll().orderBy('title', 'asc').execute();
+}
+
+/**
+ * Retrieves all courses required for a given minor ID.
+ *
+ * @param db - Kysely CourseDatabase instance
+ * @param minorId - Target minor UUID
+ * @returns Array of required Course records
+ */
+export async function getCoursesForMinor(
+  db: Kysely<CourseDatabase>,
+  minorId: string
+): Promise<Course[]> {
+  return await db
+    .selectFrom('minor_requirements')
+    .innerJoin('courses', 'courses.course_id', 'minor_requirements.course_id')
+    .where('minor_requirements.minor_id', '=', minorId)
+    .selectAll('courses')
+    .orderBy('courses.numeric_code', 'asc')
+    .execute();
+}
+

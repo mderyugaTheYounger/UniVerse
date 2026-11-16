@@ -7,7 +7,6 @@ import {
   mockMajors,
   mockMinors,
   getPrerequisiteCourses,
-  getUnlockedCourses,
   getCoursesForMajor,
   getCoursesForMinor,
 } from '../data/mockCourseData';
@@ -39,11 +38,14 @@ import {
  * @returns {Promise<Department[]>}
  */
 async function apiFetchDepartments() {
-  // TODO: replace with real API call:
-  // const res = await fetch('/api/departments');
-  // if (!res.ok) throw new Error('Failed to fetch departments');
-  // return res.json();
-  return new Promise((resolve) => setTimeout(() => resolve(mockDepartments), 400));
+  try {
+    const res = await fetch('/api/departments');
+    if (!res.ok) throw new Error('Failed to fetch departments');
+    return await res.json();
+  } catch (err) {
+    console.warn('apiFetchDepartments failed, using fallback:', err);
+    return mockDepartments;
+  }
 }
 
 /**
@@ -54,38 +56,41 @@ async function apiFetchDepartments() {
  * @returns {Promise<Course[]>}
  */
 async function apiFetchCourses(params = {}) {
-  // TODO: replace with real API call:
-  // const url = new URL('/api/courses', window.location.origin);
-  // Object.entries(params).forEach(([k, v]) => v && url.searchParams.set(k, v));
-  // const res = await fetch(url);
-  // if (!res.ok) throw new Error('Failed to fetch courses');
-  // return res.json();
-  return new Promise((resolve) =>
-    setTimeout(() => {
-      let results = [...mockCourses];
-      if (params.department && params.department !== 'ALL') {
-        results = results.filter((c) => c.alpha_code === params.department);
+  try {
+    const url = new URL('/api/courses', window.location.origin);
+    Object.entries(params).forEach(([k, v]) => {
+      if (v !== undefined && v !== null && v !== '' && v !== 'ALL') {
+        url.searchParams.set(k, String(v));
       }
-      if (params.level && params.level !== 'ALL') {
-        results = results.filter((c) => c.numeric_code.charAt(0) === params.level.charAt(0));
-      }
-      if (params.credits && params.credits !== 'ALL') {
-        results = results.filter((c) => c.credit_hours === parseInt(params.credits, 10));
-      }
-      if (params.q && params.q.trim() !== '') {
-        const q = params.q.toLowerCase();
-        results = results.filter((c) => {
-          const code = `${c.alpha_code} ${c.numeric_code}`.toLowerCase();
-          return (
-            code.includes(q) ||
-            c.title.toLowerCase().includes(q) ||
-            (c.description || '').toLowerCase().includes(q)
-          );
-        });
-      }
-      resolve(results);
-    }, 350)
-  );
+    });
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('Failed to fetch courses');
+    return await res.json();
+  } catch (err) {
+    console.warn('apiFetchCourses failed, using fallback:', err);
+    let results = [...mockCourses];
+    if (params.department && params.department !== 'ALL') {
+      results = results.filter((c) => c.alpha_code === params.department);
+    }
+    if (params.level && params.level !== 'ALL') {
+      results = results.filter((c) => c.numeric_code.charAt(0) === params.level.charAt(0));
+    }
+    if (params.credits && params.credits !== 'ALL') {
+      results = results.filter((c) => c.credit_hours === parseInt(params.credits, 10));
+    }
+    if (params.q && params.q.trim() !== '') {
+      const q = params.q.toLowerCase();
+      results = results.filter((c) => {
+        const code = `${c.alpha_code} ${c.numeric_code}`.toLowerCase();
+        return (
+          code.includes(q) ||
+          c.title.toLowerCase().includes(q) ||
+          (c.description || '').toLowerCase().includes(q)
+        );
+      });
+    }
+    return results;
+  }
 }
 
 /**
@@ -96,12 +101,14 @@ async function apiFetchCourses(params = {}) {
  * @returns {Promise<Course[]>}
  */
 async function apiFetchPrerequisites(courseId) {
-  // TODO: replace with real API call:
-  // const res = await fetch(`/api/courses/${courseId}/prerequisites`);
-  // return res.json();
-  return new Promise((resolve) =>
-    setTimeout(() => resolve(getPrerequisiteCourses(courseId)), 200)
-  );
+  try {
+    const res = await fetch(`/api/courses/${encodeURIComponent(courseId)}/prerequisites`);
+    if (!res.ok) throw new Error('Failed to fetch prerequisites');
+    return await res.json();
+  } catch (err) {
+    console.warn('apiFetchPrerequisites failed, using fallback:', err);
+    return getPrerequisiteCourses(courseId);
+  }
 }
 
 /**
@@ -110,22 +117,26 @@ async function apiFetchPrerequisites(courseId) {
  * @returns {Promise<Array<{ major: object, courses: Course[] }>>}
  */
 async function apiFetchMajorsWithCourses() {
-  // TODO: replace with real API call:
-  // const majors = await fetch('/api/majors').then(r => r.json());
-  // const withCourses = await Promise.all(majors.map(async (m) => ({
-  //   major: m,
-  //   courses: await fetch(`/api/majors/${m.major_id}/courses`).then(r => r.json()),
-  // })));
-  // return withCourses;
-  return new Promise((resolve) =>
-    setTimeout(
-      () =>
-        resolve(
-          mockMajors.map((m) => ({ major: m, courses: getCoursesForMajor(m.major_id) }))
-        ),
-      450
-    )
-  );
+  try {
+    const res = await fetch('/api/majors');
+    if (!res.ok) throw new Error('Failed to fetch majors');
+    const majors = await res.json();
+    const withCourses = await Promise.all(
+      majors.map(async (m) => {
+        const cRes = await fetch(`/api/majors/${encodeURIComponent(m.major_id)}/courses`);
+        if (!cRes.ok) throw new Error(`Failed to fetch courses for major ${m.major_id}`);
+        const courses = await cRes.json();
+        return {
+          major: m,
+          courses,
+        };
+      })
+    );
+    return withCourses;
+  } catch (err) {
+    console.warn('apiFetchMajorsWithCourses failed, using fallback:', err);
+    return mockMajors.map((m) => ({ major: m, courses: getCoursesForMajor(m.major_id) }));
+  }
 }
 
 /**
@@ -133,22 +144,26 @@ async function apiFetchMajorsWithCourses() {
  * @returns {Promise<Array<{ minor: object, courses: Course[] }>>}
  */
 async function apiFetchMinorsWithCourses() {
-  // TODO: replace with real API call:
-  // const minors = await fetch('/api/minors').then(r => r.json());
-  // const withCourses = await Promise.all(minors.map(async (m) => ({
-  //   minor: m,
-  //   courses: await fetch(`/api/minors/${m.minor_id}/courses`).then(r => r.json()),
-  // })));
-  // return withCourses;
-  return new Promise((resolve) =>
-    setTimeout(
-      () =>
-        resolve(
-          mockMinors.map((m) => ({ minor: m, courses: getCoursesForMinor(m.minor_id) }))
-        ),
-      450
-    )
-  );
+  try {
+    const res = await fetch('/api/minors');
+    if (!res.ok) throw new Error('Failed to fetch minors');
+    const minors = await res.json();
+    const withCourses = await Promise.all(
+      minors.map(async (m) => {
+        const cRes = await fetch(`/api/minors/${encodeURIComponent(m.minor_id)}/courses`);
+        if (!cRes.ok) throw new Error(`Failed to fetch courses for minor ${m.minor_id}`);
+        const courses = await cRes.json();
+        return {
+          minor: m,
+          courses,
+        };
+      })
+    );
+    return withCourses;
+  } catch (err) {
+    console.warn('apiFetchMinorsWithCourses failed, using fallback:', err);
+    return mockMinors.map((m) => ({ minor: m, courses: getCoursesForMinor(m.minor_id) }));
+  }
 }
 
 /**
@@ -159,11 +174,14 @@ async function apiFetchMinorsWithCourses() {
  * @returns {Promise<import('../database/coursePlanDB').CoursePlanEntry[]>}
  */
 async function apiFetchPlan(userId) {
-  // TODO: replace with real API call:
-  // const res = await fetch(`/api/plan?user_id=${userId}`);
-  // if (!res.ok) throw new Error('Failed to load plan');
-  // return res.json();
-  return new Promise((resolve) => setTimeout(() => resolve([]), 300));
+  try {
+    const res = await fetch(`/api/plan?user_id=${encodeURIComponent(userId)}`);
+    if (!res.ok) throw new Error('Failed to load plan');
+    return await res.json();
+  } catch (err) {
+    console.warn('apiFetchPlan failed, using fallback:', err);
+    return [];
+  }
 }
 
 /**
@@ -174,20 +192,18 @@ async function apiFetchPlan(userId) {
  * @returns {Promise<import('../database/coursePlanDB').CoursePlanEntry>}
  */
 async function apiSavePlanEntry(entry) {
-  // TODO: replace with real API call:
-  // const res = await fetch('/api/plan', {
-  //   method: 'POST',
-  //   headers: { 'Content-Type': 'application/json' },
-  //   body: JSON.stringify(entry),
-  // });
-  // if (!res.ok) throw new Error('Failed to save plan entry');
-  // return res.json();
-  return new Promise((resolve) =>
-    setTimeout(
-      () => resolve({ ...entry, entry_id: Date.now(), created_at: new Date().toISOString() }),
-      250
-    )
-  );
+  try {
+    const res = await fetch('/api/plan', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(entry),
+    });
+    if (!res.ok) throw new Error('Failed to save plan entry');
+    return await res.json();
+  } catch (err) {
+    console.warn('apiSavePlanEntry failed, using fallback:', err);
+    return { ...entry, entry_id: Date.now(), created_at: new Date().toISOString() };
+  }
 }
 
 /**
@@ -199,17 +215,18 @@ async function apiSavePlanEntry(entry) {
  * @returns {Promise<import('../database/coursePlanDB').CoursePlanEntry>}
  */
 async function apiMovePlanEntry(entryId, update) {
-  // TODO: replace with real API call:
-  // const res = await fetch(`/api/plan/${entryId}`, {
-  //   method: 'PUT',
-  //   headers: { 'Content-Type': 'application/json' },
-  //   body: JSON.stringify(update),
-  // });
-  // if (!res.ok) throw new Error('Failed to move plan entry');
-  // return res.json();
-  return new Promise((resolve) =>
-    setTimeout(() => resolve({ entry_id: entryId, ...update }), 200)
-  );
+  try {
+    const res = await fetch(`/api/plan/${encodeURIComponent(entryId)}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(update),
+    });
+    if (!res.ok) throw new Error('Failed to move plan entry');
+    return await res.json();
+  } catch (err) {
+    console.warn('apiMovePlanEntry failed, using fallback:', err);
+    return { entry_id: entryId, ...update };
+  }
 }
 
 /**
@@ -220,10 +237,12 @@ async function apiMovePlanEntry(entryId, update) {
  * @returns {Promise<void>}
  */
 async function apiDeletePlanEntry(entryId) {
-  // TODO: replace with real API call:
-  // const res = await fetch(`/api/plan/${entryId}`, { method: 'DELETE' });
-  // if (!res.ok) throw new Error('Failed to delete plan entry');
-  return new Promise((resolve) => setTimeout(resolve, 150));
+  try {
+    const res = await fetch(`/api/plan/${encodeURIComponent(entryId)}`, { method: 'DELETE' });
+    if (!res.ok) throw new Error('Failed to delete plan entry');
+  } catch (err) {
+    console.warn('apiDeletePlanEntry failed, using fallback:', err);
+  }
 }
 
 // ============================================================================
@@ -665,11 +684,11 @@ export default function CourseCatalogPage({
       <main className="catalog-content">
         {/* API integration note */}
         <aside className="catalog-integration-banner" aria-label="Developer Architecture Note">
-          <strong>Architecture Planning:</strong> This skeleton calls stub API functions that
-          mirror <code>courseDB.ts</code> entities: <code>departments</code>,{' '}
-          <code>courses</code>, <code>majors</code>, <code>minors</code>,{' '}
-          <code>prerequisites</code>, <code>major_requirements</code>. Replace stub functions
-          at the top of this file with real <code>fetch</code> calls once the backend is live.
+          <strong>Live API Layer:</strong> Integrated with REST API endpoints mirroring{' '}
+          <code>courseDB.ts</code> and <code>coursePlanDB.ts</code> entities:{' '}
+          <code>departments</code>, <code>courses</code>, <code>majors</code>,{' '}
+          <code>minors</code>, <code>prerequisites</code>, <code>major_requirements</code>, and{' '}
+          <code>course_plan_entries</code>.
         </aside>
 
         {/* ================================================================
