@@ -56,9 +56,26 @@ export default function ProfilePage({
         </button>
 
         <h1>Student Profile</h1>
-        <p>
-          Viewing profile for: <strong>@{profileData.username}</strong> ({profileData.email})
-        </p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', margin: '12px 0' }}>
+          {currentUser?.avatar_url && (
+            <img
+              src={currentUser.avatar_url}
+              alt={profileData.fullName}
+              referrerPolicy="no-referrer"
+              style={{ width: '64px', height: '64px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #005035' }}
+            />
+          )}
+          <div>
+            <p style={{ margin: 0 }}>
+              Viewing profile for: <strong>@{profileData.username}</strong> ({profileData.email})
+            </p>
+            {currentUser?.auth_provider === 'google' && (
+              <span style={{ fontSize: '0.8rem', background: '#e8f5e9', color: '#1b5e20', padding: '2px 8px', borderRadius: '4px', fontWeight: 600 }}>
+                Verified UNC Charlotte Google Account
+              </span>
+            )}
+          </div>
+        </div>
       </header>
 
       <section style={{ margin: '16px 0' }}>

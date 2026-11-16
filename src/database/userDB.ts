@@ -44,10 +44,16 @@ export interface UserTable {
   university_id: number;
   /** Login email address (unique) */
   email: string;
-  /** Salted password hash (bcrypt/argon2), never the raw password */
-  password_hash: string;
+  /** Salted password hash (bcrypt/argon2), or null for OAuth users */
+  password_hash: string | null;
   /** Name shown to other users */
   display_name: string;
+  /** Unique Google Subject identifier (sub) from OIDC */
+  google_id?: string | null;
+  /** Profile avatar picture URL */
+  avatar_url?: string | null;
+  /** Auth provider (e.g. 'local' | 'google') */
+  auth_provider?: string;
   /** Account creation timestamp */
   created_at: Generated<Date>;
 }
@@ -149,8 +155,11 @@ export async function up(db: Kysely<any>): Promise<void> {
         .notNull()
     )
     .addColumn('email', 'varchar(255)', (col) => col.notNull().unique())
-    .addColumn('password_hash', 'text', (col) => col.notNull())
+    .addColumn('password_hash', 'text')
     .addColumn('display_name', 'varchar(100)', (col) => col.notNull())
+    .addColumn('google_id', 'varchar(255)', (col) => col.unique())
+    .addColumn('avatar_url', 'text')
+    .addColumn('auth_provider', 'varchar(50)', (col) => col.defaultTo('local').notNull())
     .addColumn('created_at', 'timestamptz', (col) =>
       col.defaultTo(sql`CURRENT_TIMESTAMP`).notNull()
     )
@@ -293,7 +302,16 @@ export async function getUserWithProfile(
 ): Promise<UserWithProfile | undefined> {
   const user = await db
     .selectFrom('users')
-    .select(['user_id', 'university_id', 'email', 'display_name', 'created_at'])
+    .select([
+      'user_id',
+      'university_id',
+      'email',
+      'display_name',
+      'avatar_url',
+      'google_id',
+      'auth_provider',
+      'created_at',
+    ])
     .where('user_id', '=', userId)
     .executeTakeFirst();
 
@@ -317,7 +335,7 @@ export async function getUserWithProfile(
 /**
  * Creates a user and an empty profile in a single transaction, so a user is
  * never left without its profile row. The email is stored lower-cased.
- * `user.password_hash` must already be hashed (bcrypt/argon2).
+ * `user.password_hash` must already be hashed (bcrypt/argon2), or null for OAuth.
  */
 export async function createUserWithProfile(
   db: Kysely<UserDatabase>,
@@ -332,7 +350,16 @@ export async function createUserWithProfile(
     const created = await trx
       .insertInto('users')
       .values({ ...user, email: user.email.toLowerCase() })
-      .returning(['user_id', 'university_id', 'email', 'display_name', 'created_at'])
+      .returning([
+        'user_id',
+        'university_id',
+        'email',
+        'display_name',
+        'avatar_url',
+        'google_id',
+        'auth_provider',
+        'created_at',
+      ])
       .executeTakeFirstOrThrow();
 
     const createdProfile = await trx
@@ -343,4 +370,112 @@ export async function createUserWithProfile(
 
     return { ...created, profile: createdProfile };
   });
+}
+
+/**
+ * Retrieves a user by their Google subject ID (sub).
+ */
+export async function getUserByGoogleId(
+  db: Kysely<UserDatabase>,
+  googleId: string
+): Promise<User | undefined> {
+  return await db
+    .selectFrom('users')
+    .selectAll()
+    .where('google_id', '=', googleId)
+    .executeTakeFirst();
+}
+
+/**
+ * Finds an existing user by Google ID or email, or creates a new user and profile.
+ * Automatically links google_id and avatar_url if the user previously existed by email.
+ */
+export async function findOrCreateGoogleUser(
+  db: Kysely<UserDatabase>,
+  userInfo: {
+    googleId: string;
+    email: string;
+    displayName: string;
+    avatarUrl?: string | null;
+  }
+): Promise<UserWithProfile> {
+  const normalizedEmail = userInfo.email.toLowerCase();
+
+  // 1. Try finding by google_id
+  let existingUser = await getUserByGoogleId(db, userInfo.googleId);
+
+  // 2. If not found, try finding by email (account linking)
+  if (!existingUser) {
+    existingUser = await getUserByEmail(db, normalizedEmail);
+    if (existingUser) {
+      await db
+        .updateTable('users')
+        .set({
+          google_id: userInfo.googleId,
+          avatar_url: userInfo.avatarUrl ?? existingUser.avatar_url,
+          display_name: existingUser.display_name || userInfo.displayName,
+        })
+        .where('user_id', '=', existingUser.user_id)
+        .execute();
+    }
+  }
+
+  if (existingUser) {
+    const userWithProfile = await getUserWithProfile(db, existingUser.user_id);
+    if (userWithProfile) return userWithProfile;
+  }
+
+  // 3. User does not exist yet: find or default university
+  const domain = normalizedEmail.split('@')[1];
+  const university = await db
+    .selectFrom('universities')
+    .selectAll()
+    .where('email_domain', '=', domain)
+    .executeTakeFirst();
+
+  let universityId: number;
+  if (university) {
+    universityId = university.university_id;
+  } else {
+    // Fallback: look up or create UNC Charlotte
+    const uncc = await db
+      .selectFrom('universities')
+      .selectAll()
+      .where('email_domain', 'in', ['charlotte.edu', 'uncc.edu'])
+      .executeTakeFirst();
+    if (uncc) {
+      universityId = uncc.university_id;
+    } else {
+      const inserted = await db
+        .insertInto('universities')
+        .values({
+          name: 'University of North Carolina at Charlotte',
+          email_domain: domain || 'charlotte.edu',
+          city: 'Charlotte',
+          state: 'NC',
+        })
+        .returning('university_id')
+        .executeTakeFirstOrThrow();
+      universityId = inserted.university_id;
+    }
+  }
+
+  // 4. Create new user and profile
+  return await createUserWithProfile(
+    db,
+    {
+      university_id: universityId,
+      email: normalizedEmail,
+      password_hash: null,
+      display_name: userInfo.displayName,
+      google_id: userInfo.googleId,
+      avatar_url: userInfo.avatarUrl ?? null,
+      auth_provider: 'google',
+    },
+    {
+      bio: null,
+      interests: null,
+      graduation_year: null,
+    }
+  );
 }

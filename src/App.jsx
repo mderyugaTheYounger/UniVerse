@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import LandingPage from './components/LandingPage';
 import LoginPage from './components/LoginPage';
 import ProfilePage from './components/ProfilePage';
@@ -11,12 +11,39 @@ export default function App() {
   const [currentView, setCurrentView] = useState('landing');
   const [currentUser, setCurrentUser] = useState(null);
 
+  // Restore authenticated session on page refresh
+  useEffect(() => {
+    const token = localStorage.getItem('universe_auth_token');
+    if (!token) return;
+
+    fetch('/api/auth/me', {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error('Session expired');
+        }
+        return res.json();
+      })
+      .then((data) => {
+        if (data.user) {
+          setCurrentUser(data.user);
+        }
+      })
+      .catch(() => {
+        localStorage.removeItem('universe_auth_token');
+      });
+  }, []);
+
   const handleAuthSuccess = (userData) => {
     setCurrentUser(userData);
     setCurrentView('profile'); // Switches view to profile upon sign up/in
   };
 
   const handleLogout = () => {
+    localStorage.removeItem('universe_auth_token');
     setCurrentUser(null);
     setCurrentView('landing');
   };
