@@ -4,6 +4,7 @@ import LoginPage from './components/LoginPage';
 import ProfilePage from './components/ProfilePage';
 import CourseCatalogPage from './components/CourseCatalogPage';
 import RoommateFinderPage from './components/RoommateFinderPage';
+import HousingMap from './components/Map';
 import './App.css';
 
 export default function App() {
@@ -30,6 +31,7 @@ export default function App() {
           onNavigateToProfile={() => setCurrentView('profile')}
           onNavigateToCatalog={() => setCurrentView('catalog')}
           onNavigateToRoommates={() => setCurrentView('roommates')}
+          onNavigateToMap={() => setCurrentView('map')}
           onLogout={handleLogout}
         />
       )}
@@ -73,6 +75,10 @@ export default function App() {
           onNavigateToSignIn={() => setCurrentView('signin')}
           onLogout={handleLogout}
         />
+      )}
+
+      {currentView === 'map' && (
+        <HousingMap onNavigateBack={() => setCurrentView('landing')} />
       )}
     </div>
   );
