@@ -310,6 +310,9 @@ export function saveUserProfile(profile: UserProfile): void {
     window.dispatchEvent(
       new CustomEvent('universe_profile_saved', { detail: payload })
     );
+    window.dispatchEvent(
+      new CustomEvent('profileUpdated', { detail: payload })
+    );
   }
 }
 

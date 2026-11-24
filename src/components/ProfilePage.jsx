@@ -86,13 +86,16 @@ export default function ProfilePage({
   // Handlers for Roommate Preferences
   const handleRoommateToggle = (e) => {
     const isSeeking = e.target.checked;
-    setProfile((prev) => ({
-      ...prev,
+    const updated = {
+      ...profile,
       preferences: {
-        ...prev.preferences,
+        ...profile.preferences,
         isSeekingRoommate: isSeeking,
       },
-    }));
+    };
+    setProfile(updated);
+    // Persist immediately to localStorage and dispatch profileUpdated event for instant navbar sync
+    saveUserProfile(updated);
   };
 
   const handlePreferenceChange = (field, value) => {
@@ -185,7 +188,7 @@ export default function ProfilePage({
               Course Catalog
             </button>
           )}
-          {onNavigateToRoommates && (
+          {profile.preferences.isSeekingRoommate && onNavigateToRoommates && (
             <button type="button" className="profile-nav-btn" onClick={onNavigateToRoommates}>
               Roommate Finder
             </button>

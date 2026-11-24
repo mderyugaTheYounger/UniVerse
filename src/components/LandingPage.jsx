@@ -2,6 +2,7 @@ import { useState } from 'react';
 
 export default function LandingPage({
   currentUser,
+  isSeekingRoommate,
   onNavigateToSignIn,
   onNavigateToSignUp,
   onNavigateToProfile,
@@ -78,17 +79,19 @@ export default function LandingPage({
                         Course Catalog
                       </button>
                     </li>
-                    <li>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setIsMenuOpen(false);
-                          onNavigateToRoommates && onNavigateToRoommates();
-                        }}
-                      >
-                        Roommate Finder
-                      </button>
-                    </li>
+                    {isSeekingRoommate !== false && onNavigateToRoommates && (
+                      <li>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsMenuOpen(false);
+                            onNavigateToRoommates();
+                          }}
+                        >
+                          Roommate Finder
+                        </button>
+                      </li>
+                    )}
                     <li>
                       <button
                         type="button"
@@ -136,17 +139,19 @@ export default function LandingPage({
                         Course Catalog
                       </button>
                     </li>
-                    <li>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setIsMenuOpen(false);
-                          onNavigateToRoommates && onNavigateToRoommates();
-                        }}
-                      >
-                        Roommate Finder
-                      </button>
-                    </li>
+                    {isSeekingRoommate !== false && onNavigateToRoommates && (
+                      <li>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsMenuOpen(false);
+                            onNavigateToRoommates();
+                          }}
+                        >
+                          Roommate Finder
+                        </button>
+                      </li>
+                    )}
                     <li>
                       <button
                         type="button"
@@ -198,15 +203,17 @@ export default function LandingPage({
           <h3>Course Catalog</h3>
           <p>Degree requirements, majors, minors, and prerequisite trees.</p>
         </article>
-        <article
-          role="button"
-          tabIndex={0}
-          onClick={onNavigateToRoommates}
-          onKeyDown={e => e.key === 'Enter' && onNavigateToRoommates && onNavigateToRoommates()}
-        >
-          <h3>Roommate Matching</h3>
-          <p>Find roommates based on living habits, cleanliness, and budgets.</p>
-        </article>
+        {isSeekingRoommate !== false && onNavigateToRoommates && (
+          <article
+            role="button"
+            tabIndex={0}
+            onClick={onNavigateToRoommates}
+            onKeyDown={e => e.key === 'Enter' && onNavigateToRoommates && onNavigateToRoommates()}
+          >
+            <h3>Roommate Matching</h3>
+            <p>Find roommates based on living habits, cleanliness, and budgets.</p>
+          </article>
+        )}
         <article
           role="button"
           tabIndex={0}

@@ -38,6 +38,7 @@ import {
  */
 export default function RoommateFinderPage({
   currentUser,
+  isSeekingRoommate,
   onNavigateToLanding,
   onNavigateToCatalog,
   onNavigateToProfile,
@@ -68,7 +69,10 @@ export default function RoommateFinderPage({
     };
   }, [currentUser]);
 
-  const isUserSeeking = userProfile?.preferences?.isSeekingRoommate === true;
+  const isUserSeeking =
+    typeof isSeekingRoommate === 'boolean'
+      ? isSeekingRoommate
+      : userProfile?.preferences?.isSeekingRoommate === true;
 
   // Filter State (strictly reflects RoommateFilterOptions from roommateDB.ts)
   const [filters, setFilters] = useState({
@@ -265,13 +269,15 @@ export default function RoommateFinderPage({
           >
             Course Catalog
           </button>
-          <button
-            type="button"
-            className="roommate-nav-link active"
-            onClick={() => setActiveTab('browse')}
-          >
-            Roommate Finder
-          </button>
+          {isUserSeeking && (
+            <button
+              type="button"
+              className="roommate-nav-link active"
+              onClick={() => setActiveTab('browse')}
+            >
+              Roommate Finder
+            </button>
+          )}
           {currentUser ? (
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
               <button
@@ -362,288 +368,327 @@ export default function RoommateFinderPage({
         {/* TAB 1: BROWSE CANDIDATES */}
         {activeTab === 'browse' && (
           <section aria-label="Roommate Candidates Search">
-            {/* User Roommate Search Status Banner */}
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                padding: '12px 18px',
-                marginBottom: '16px',
-                borderRadius: '6px',
-                flexWrap: 'wrap',
-                gap: '12px',
-                backgroundColor: isUserSeeking ? '#e8f5e9' : 'var(--white)',
-                border: `1px solid ${isUserSeeking ? '#81c784' : 'var(--border-color)'}`,
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-                {isUserSeeking ? (
-                  <span className="status-pill status-pill-active">
-                    &bull; Status: Actively searching for roommates
-                  </span>
-                ) : (
-                  <span className="status-pill status-pill-inactive">
-                    &bull; Status: Not looking for roommates
-                  </span>
-                )}
-                <span
-                  style={{
-                    fontSize: '13px',
-                    color: isUserSeeking ? '#1b5e20' : 'var(--text-secondary)',
-                  }}
-                >
-                  {isUserSeeking
-                    ? 'Your profile is published and active in the public Charlotte directory.'
-                    : 'Your profile is excluded from public search results.'}
-                </span>
-              </div>
-
-              {onNavigateToProfile && (
-                <button
-                  type="button"
-                  className="btn-secondary"
-                  onClick={onNavigateToProfile}
-                  style={{ fontSize: '13px', padding: '5px 12px' }}
-                >
-                  {isUserSeeking ? 'Manage Preferences' : 'Opt In on Profile'}
-                </button>
-              )}
-            </div>
-
-            {/* Filter controls */}
-            <div className="roommate-filter-card">
-              <h2>Filter Potential Roommates</h2>
-              <div className="roommate-filters-grid">
-                <div className="roommate-field">
-                  <label htmlFor="search-input">Search by Name, Major, or Interests</label>
-                  <input
-                    id="search-input"
-                    type="text"
-                    placeholder="e.g. Computer Science, hiking, Maya"
-                    value={filters.searchQuery}
-                    onChange={(e) => handleFilterChange('searchQuery', e.target.value)}
-                  />
-                </div>
-
-                <div className="roommate-field">
-                  <label htmlFor="budget-select">Max Monthly Rent: ${filters.maxBudget}</label>
-                  <select
-                    id="budget-select"
-                    value={filters.maxBudget}
-                    onChange={(e) => handleFilterChange('maxBudget', Number(e.target.value))}
-                  >
-                    <option value={750}>Up to $750 / mo</option>
-                    <option value={850}>Up to $850 / mo</option>
-                    <option value={1000}>Up to $1,000 / mo</option>
-                    <option value={1200}>Up to $1,200 / mo</option>
-                    <option value={1500}>Up to $1,500 / mo</option>
-                  </select>
-                </div>
-
-                <div className="roommate-field">
-                  <label htmlFor="sleep-select">Sleep Schedule</label>
-                  <select
-                    id="sleep-select"
-                    value={filters.sleepSchedule}
-                    onChange={(e) => handleFilterChange('sleepSchedule', e.target.value)}
-                  >
-                    <option value="all">All Schedules</option>
-                    <option value="early_bird">Early Bird (Early riser)</option>
-                    <option value="night_owl">Night Owl (Late hours)</option>
-                    <option value="flexible">Flexible / Variable</option>
-                  </select>
-                </div>
-
-                <div className="roommate-field">
-                  <label htmlFor="clean-select">Cleanliness</label>
-                  <select
-                    id="clean-select"
-                    value={filters.cleanliness}
-                    onChange={(e) => handleFilterChange('cleanliness', e.target.value)}
-                  >
-                    <option value="all">All Cleanliness Levels</option>
-                    <option value="neat">Neat (Very tidy)</option>
-                    <option value="moderate">Moderate (Reasonably organized)</option>
-                    <option value="relaxed">Relaxed (Casual upkeep)</option>
-                  </select>
-                </div>
-
-                <button
-                  type="button"
-                  className="roommate-reset-btn"
-                  onClick={handleResetFilters}
-                >
-                  Reset Filters
-                </button>
-              </div>
-
-              <div className="roommate-checkbox-group">
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={filters.petsOnly}
-                    onChange={(e) => handleFilterChange('petsOnly', e.target.checked)}
-                  />
-                  Pet-Friendly Homes Only (pets_ok)
-                </label>
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={filters.nonSmokingOnly}
-                    onChange={(e) => handleFilterChange('nonSmokingOnly', e.target.checked)}
-                  />
-                  Strictly Non-Smoking (smoking_ok = false)
-                </label>
-              </div>
-
-              <div className="roommate-results-status">
-                <span>
-                  Showing <strong>{matchingRoommates.length}</strong> matching candidates out of{' '}
-                  <strong>{allCandidates.length}</strong> profiles
-                </span>
-                <span>
-                  Saved: <strong>{savedUserIds.size}</strong> roommates
-                </span>
-              </div>
-            </div>
-
-            {/* Candidates Grid */}
-            {matchingRoommates.length === 0 ? (
+            {!isUserSeeking ? (
               <div
+                className="roommate-empty-prompt-card"
                 style={{
                   textAlign: 'center',
-                  padding: '40px',
+                  padding: '56px 24px',
                   backgroundColor: 'var(--white)',
                   border: '1px solid var(--border-color)',
-                  borderRadius: '4px',
+                  borderRadius: '6px',
+                  marginBottom: '24px',
+                  boxShadow: 'var(--shadow-sm)',
                 }}
               >
-                <h3>No roommates match the selected criteria.</h3>
-                <p style={{ color: 'var(--text-muted)' }}>
-                  Try raising your budget threshold or setting Sleep Schedule to All.
-                </p>
-                <button
-                  type="button"
-                  className="btn-secondary"
-                  onClick={handleResetFilters}
-                  style={{ marginTop: '12px' }}
+                <div style={{ marginBottom: '14px' }}>
+                  <span className="status-pill status-pill-inactive" style={{ fontSize: '13px', padding: '6px 14px' }}>
+                    &bull; Status: Not looking for roommates
+                  </span>
+                </div>
+                <h2 style={{ color: 'var(--niner-green)', marginBottom: '10px' }}>
+                  Roommate Matching is Inactive
+                </h2>
+                <p
+                  style={{
+                    maxWidth: '540px',
+                    margin: '0 auto 24px',
+                    color: 'var(--text-secondary)',
+                    fontSize: '15px',
+                    lineHeight: '1.6',
+                  }}
                 >
-                  Reset Filters
-                </button>
+                  You are currently not looking for a roommate. Turn on the toggle in your profile to participate and view matches.
+                </p>
+                {onNavigateToProfile && (
+                  <button
+                    type="button"
+                    className="btn-primary"
+                    onClick={onNavigateToProfile}
+                    style={{ fontSize: '15px', padding: '10px 24px' }}
+                  >
+                    Go to Profile &amp; Turn On
+                  </button>
+                )}
               </div>
             ) : (
-              <div className="roommate-grid">
-                {matchingRoommates.map((candidate) => {
-                  const isSaved = savedUserIds.has(candidate.user_id);
-                  const cleanLabel =
-                    candidate.cleanliness === 'neat'
-                      ? 'Cleanliness: Neat'
-                      : candidate.cleanliness === 'moderate'
-                      ? 'Cleanliness: Moderate'
-                      : 'Cleanliness: Relaxed';
+              <>
+                {/* User Roommate Search Status Banner */}
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '12px 18px',
+                    marginBottom: '16px',
+                    borderRadius: '6px',
+                    flexWrap: 'wrap',
+                    gap: '12px',
+                    backgroundColor: '#e8f5e9',
+                    border: '1px solid #81c784',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                    <span className="status-pill status-pill-active">
+                      &bull; Status: Actively searching for roommates
+                    </span>
+                    <span
+                      style={{
+                        fontSize: '13px',
+                        color: '#1b5e20',
+                      }}
+                    >
+                      Your profile is published and active in the public Charlotte directory.
+                    </span>
+                  </div>
 
-                  const sleepLabel =
-                    candidate.sleep_schedule === 'early_bird'
-                      ? 'Sleep: Early Bird'
-                      : candidate.sleep_schedule === 'night_owl'
-                      ? 'Sleep: Night Owl'
-                      : 'Sleep: Flexible';
+                  {onNavigateToProfile && (
+                    <button
+                      type="button"
+                      className="btn-secondary"
+                      onClick={onNavigateToProfile}
+                      style={{ fontSize: '13px', padding: '5px 12px' }}
+                    >
+                      Manage Preferences
+                    </button>
+                  )}
+                </div>
 
-                  return (
-                    <article key={candidate.user_id} className="roommate-card">
-                      <div>
-                        <div className="roommate-card-top">
-                          <div className="roommate-card-identity">
-                            <h3>{candidate.display_name}</h3>
-                            {candidate.is_current_user ? (
-                              <span
-                                className="roommate-verified-badge"
-                                style={{
-                                  backgroundColor: '#e8f5e9',
-                                  color: 'var(--niner-green)',
-                                  borderColor: 'var(--niner-green)',
-                                  fontWeight: 700,
-                                }}
-                              >
-                                [Your Active Listing]
+                {/* Filter controls */}
+                <div className="roommate-filter-card">
+                  <h2>Filter Potential Roommates</h2>
+                  <div className="roommate-filters-grid">
+                    <div className="roommate-field">
+                      <label htmlFor="search-input">Search by Name, Major, or Interests</label>
+                      <input
+                        id="search-input"
+                        type="text"
+                        placeholder="e.g. Computer Science, hiking, Maya"
+                        value={filters.searchQuery}
+                        onChange={(e) => handleFilterChange('searchQuery', e.target.value)}
+                      />
+                    </div>
+
+                    <div className="roommate-field">
+                      <label htmlFor="budget-select">Max Monthly Rent: ${filters.maxBudget}</label>
+                      <select
+                        id="budget-select"
+                        value={filters.maxBudget}
+                        onChange={(e) => handleFilterChange('maxBudget', Number(e.target.value))}
+                      >
+                        <option value={750}>Up to $750 / mo</option>
+                        <option value={850}>Up to $850 / mo</option>
+                        <option value={1000}>Up to $1,000 / mo</option>
+                        <option value={1200}>Up to $1,200 / mo</option>
+                        <option value={1500}>Up to $1,500 / mo</option>
+                      </select>
+                    </div>
+
+                    <div className="roommate-field">
+                      <label htmlFor="sleep-select">Sleep Schedule</label>
+                      <select
+                        id="sleep-select"
+                        value={filters.sleepSchedule}
+                        onChange={(e) => handleFilterChange('sleepSchedule', e.target.value)}
+                      >
+                        <option value="all">All Schedules</option>
+                        <option value="early_bird">Early Bird (Early riser)</option>
+                        <option value="night_owl">Night Owl (Late hours)</option>
+                        <option value="flexible">Flexible / Variable</option>
+                      </select>
+                    </div>
+
+                    <div className="roommate-field">
+                      <label htmlFor="clean-select">Cleanliness</label>
+                      <select
+                        id="clean-select"
+                        value={filters.cleanliness}
+                        onChange={(e) => handleFilterChange('cleanliness', e.target.value)}
+                      >
+                        <option value="all">All Cleanliness Levels</option>
+                        <option value="neat">Neat (Very tidy)</option>
+                        <option value="moderate">Moderate (Reasonably organized)</option>
+                        <option value="relaxed">Relaxed (Casual upkeep)</option>
+                      </select>
+                    </div>
+
+                    <button
+                      type="button"
+                      className="roommate-reset-btn"
+                      onClick={handleResetFilters}
+                    >
+                      Reset Filters
+                    </button>
+                  </div>
+
+                  <div className="roommate-checkbox-group">
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={filters.petsOnly}
+                        onChange={(e) => handleFilterChange('petsOnly', e.target.checked)}
+                      />
+                      Pet-Friendly Homes Only (pets_ok)
+                    </label>
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={filters.nonSmokingOnly}
+                        onChange={(e) => handleFilterChange('nonSmokingOnly', e.target.checked)}
+                      />
+                      Strictly Non-Smoking (smoking_ok = false)
+                    </label>
+                  </div>
+
+                  <div className="roommate-results-status">
+                    <span>
+                      Showing <strong>{matchingRoommates.length}</strong> matching candidates out of{' '}
+                      <strong>{allCandidates.length}</strong> profiles
+                    </span>
+                    <span>
+                      Saved: <strong>{savedUserIds.size}</strong> roommates
+                    </span>
+                  </div>
+                </div>
+
+                {/* Candidates Grid */}
+                {matchingRoommates.length === 0 ? (
+                  <div
+                    style={{
+                      textAlign: 'center',
+                      padding: '40px',
+                      backgroundColor: 'var(--white)',
+                      border: '1px solid var(--border-color)',
+                      borderRadius: '4px',
+                    }}
+                  >
+                    <h3>No roommates match the selected criteria.</h3>
+                    <p style={{ color: 'var(--text-muted)' }}>
+                      Try raising your budget threshold or setting Sleep Schedule to All.
+                    </p>
+                    <button
+                      type="button"
+                      className="btn-secondary"
+                      onClick={handleResetFilters}
+                      style={{ marginTop: '12px' }}
+                    >
+                      Reset Filters
+                    </button>
+                  </div>
+                ) : (
+                  <div className="roommate-grid">
+                    {matchingRoommates.map((candidate) => {
+                      const isSaved = savedUserIds.has(candidate.user_id);
+                      const cleanLabel =
+                        candidate.cleanliness === 'neat'
+                          ? 'Cleanliness: Neat'
+                          : candidate.cleanliness === 'moderate'
+                          ? 'Cleanliness: Moderate'
+                          : 'Cleanliness: Relaxed';
+
+                      const sleepLabel =
+                        candidate.sleep_schedule === 'early_bird'
+                          ? 'Sleep: Early Bird'
+                          : candidate.sleep_schedule === 'night_owl'
+                          ? 'Sleep: Night Owl'
+                          : 'Sleep: Flexible';
+
+                      return (
+                        <article key={candidate.user_id} className="roommate-card">
+                          <div>
+                            <div className="roommate-card-top">
+                              <div className="roommate-card-identity">
+                                <h3>{candidate.display_name}</h3>
+                                {candidate.is_current_user ? (
+                                  <span
+                                    className="roommate-verified-badge"
+                                    style={{
+                                      backgroundColor: '#e8f5e9',
+                                      color: 'var(--niner-green)',
+                                      borderColor: 'var(--niner-green)',
+                                      fontWeight: 700,
+                                    }}
+                                  >
+                                    [Your Active Listing]
+                                  </span>
+                                ) : (
+                                  <span className="roommate-verified-badge">[UNCC Verified]</span>
+                                )}
+                              </div>
+                              <span className="habit-badge habit-badge-budget">
+                                Max ${candidate.budget_max}/mo
                               </span>
+                            </div>
+
+                            <div className="roommate-academic-line">
+                              <strong>{candidate.major}</strong> &bull; Class of {candidate.graduation_year}
+                            </div>
+
+                            {/* Living Habit Badges */}
+                            <div className="roommate-habits-group">
+                              <span className="habit-badge habit-badge-schedule">{sleepLabel}</span>
+                              <span className="habit-badge habit-badge-clean">{cleanLabel}</span>
+                              <span className="habit-badge habit-badge-pet">
+                                {candidate.pets_ok ? 'Pets: Welcome' : 'Pets: No pets'}
+                              </span>
+                              <span className="habit-badge habit-badge-smoke">
+                                {candidate.smoking_ok ? 'Smoking: OK' : 'Non-Smoker'}
+                              </span>
+                            </div>
+
+                            <p className="roommate-bio-text">{candidate.bio}</p>
+
+                            <div className="roommate-interests-section">
+                              <div className="roommate-interests-label">Interests &amp; Hobbies:</div>
+                              <div className="roommate-interest-tags">
+                                {candidate.interests.split(',').map((interest, idx) => (
+                                  <span key={idx} className="roommate-interest-tag">
+                                    {interest.trim()}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+
+                            <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '8px' }}>
+                              Target Housing: <strong>{candidate.housing_preference}</strong> &bull; Move-in:{' '}
+                              {candidate.preferred_move_in}
+                            </div>
+                          </div>
+
+                          <div className="roommate-card-actions">
+                            {candidate.is_current_user ? (
+                              <button
+                                type="button"
+                                className="btn-primary"
+                                onClick={onNavigateToProfile}
+                              >
+                                Edit My Profile
+                              </button>
                             ) : (
-                              <span className="roommate-verified-badge">[UNCC Verified]</span>
+                              <>
+                                <button
+                                  type="button"
+                                  className="btn-primary"
+                                  onClick={() => setMessageTarget(candidate)}
+                                >
+                                  Connect
+                                </button>
+                                <button
+                                  type="button"
+                                  className="btn-secondary"
+                                  onClick={() => toggleSaveRoommate(candidate.user_id)}
+                                >
+                                  {isSaved ? '[Saved]' : 'Save Profile'}
+                                </button>
+                              </>
                             )}
                           </div>
-                          <span className="habit-badge habit-badge-budget">
-                            Max ${candidate.budget_max}/mo
-                          </span>
-                        </div>
-
-                        <div className="roommate-academic-line">
-                          <strong>{candidate.major}</strong> &bull; Class of {candidate.graduation_year}
-                        </div>
-
-                        {/* Living Habit Badges */}
-                        <div className="roommate-habits-group">
-                          <span className="habit-badge habit-badge-schedule">{sleepLabel}</span>
-                          <span className="habit-badge habit-badge-clean">{cleanLabel}</span>
-                          <span className="habit-badge habit-badge-pet">
-                            {candidate.pets_ok ? 'Pets: Welcome' : 'Pets: No pets'}
-                          </span>
-                          <span className="habit-badge habit-badge-smoke">
-                            {candidate.smoking_ok ? 'Smoking: OK' : 'Non-Smoker'}
-                          </span>
-                        </div>
-
-                        <p className="roommate-bio-text">{candidate.bio}</p>
-
-                        <div className="roommate-interests-section">
-                          <div className="roommate-interests-label">Interests &amp; Hobbies:</div>
-                          <div className="roommate-interest-tags">
-                            {candidate.interests.split(',').map((interest, idx) => (
-                              <span key={idx} className="roommate-interest-tag">
-                                {interest.trim()}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-
-                        <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '8px' }}>
-                          Target Housing: <strong>{candidate.housing_preference}</strong> &bull; Move-in:{' '}
-                          {candidate.preferred_move_in}
-                        </div>
-                      </div>
-
-                      <div className="roommate-card-actions">
-                        {candidate.is_current_user ? (
-                          <button
-                            type="button"
-                            className="btn-primary"
-                            onClick={onNavigateToProfile}
-                          >
-                            Edit My Profile
-                          </button>
-                        ) : (
-                          <>
-                            <button
-                              type="button"
-                              className="btn-primary"
-                              onClick={() => setMessageTarget(candidate)}
-                            >
-                              Connect
-                            </button>
-                            <button
-                              type="button"
-                              className="btn-secondary"
-                              onClick={() => toggleSaveRoommate(candidate.user_id)}
-                            >
-                              {isSaved ? '[Saved]' : 'Save Profile'}
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </article>
-                  );
-                })}
-              </div>
+                        </article>
+                      );
+                    })}
+                  </div>
+                )}
+              </>
             )}
           </section>
         )}
