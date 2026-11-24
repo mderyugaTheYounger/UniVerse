@@ -1,0 +1,517 @@
+/* ============================================================
+   Profile Page Stylesheet – UNC Charlotte Themed
+   Theme: Niner Green (#005035), Niner Gold (#A49665), Neutrals
+   Design Rules: WCAG AA contrast, no gradients, clean layout
+   ============================================================ */
+
+.profile-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--off-white);
+  color: var(--text-primary);
+  font-family: var(--sans);
+}
+
+/* Header */
+.profile-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  height: var(--header-height);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  background-color: var(--niner-green);
+  border-bottom: 3px solid var(--niner-gold);
+}
+
+.profile-header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.profile-header-brand {
+  font-family: var(--heading);
+  font-size: 22px;
+  color: var(--white);
+  font-weight: 600;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  letter-spacing: 0.5px;
+}
+
+.profile-header-brand:hover {
+  color: var(--silver-light);
+}
+
+.profile-nav {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.profile-nav-btn {
+  background: transparent;
+  color: var(--white);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 6px 14px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.profile-nav-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: var(--white);
+}
+
+.profile-nav-btn.signout {
+  color: var(--silver-light);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.profile-nav-btn.signout:hover {
+  background: rgba(179, 48, 48, 0.25);
+  border-color: #ff8585;
+  color: #ffc2c2;
+}
+
+/* Hero / Identity Banner */
+.profile-banner {
+  background-color: var(--white);
+  border-bottom: 1px solid var(--border-color);
+  padding: 24px;
+}
+
+.profile-banner-inner {
+  max-width: 960px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.profile-identity {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.profile-avatar {
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--niner-green);
+  background-color: var(--off-white);
+}
+
+.profile-avatar-fallback {
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  background-color: var(--niner-green);
+  color: var(--niner-gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  font-weight: 700;
+  border: 3px solid var(--niner-gold);
+  flex-shrink: 0;
+}
+
+.profile-titles h1 {
+  margin: 0 0 4px;
+  font-size: 24px;
+  color: var(--niner-green);
+}
+
+.profile-subline {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.verified-badge {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background-color: #e8f5e9;
+  color: #1b5e20;
+  border: 1px solid #c8e6c9;
+  padding: 2px 8px;
+  border-radius: 3px;
+}
+
+/* Main Container */
+.profile-container {
+  max-width: 960px;
+  margin: 24px auto 48px;
+  padding: 0 16px;
+  width: 100%;
+}
+
+/* Success Alert */
+.profile-success-alert {
+  background-color: #e8f5e9;
+  color: #1b5e20;
+  border: 1px solid #81c784;
+  padding: 12px 16px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Cards */
+.profile-card {
+  background-color: var(--white);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: var(--shadow-sm);
+}
+
+.profile-card-header {
+  border-bottom: 1px solid var(--silver-light);
+  padding-bottom: 12px;
+  margin-bottom: 20px;
+}
+
+.profile-card-title {
+  font-size: 18px;
+  margin: 0 0 4px;
+  color: var(--niner-green);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.profile-card-desc {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+/* Form Layout */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-field.full-width {
+  grid-column: 1 / -1;
+}
+
+.form-field label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.form-field input[type="text"],
+.form-field input[type="email"],
+.form-field input[type="number"],
+.form-field select,
+.form-field textarea {
+  padding: 9px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-family: var(--sans);
+  font-size: 14px;
+  color: var(--text-primary);
+  background-color: var(--white);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.form-field input:focus,
+.form-field select:focus,
+.form-field textarea:focus {
+  border-color: var(--niner-green);
+  box-shadow: 0 0 0 2px var(--focus-ring);
+  outline: none;
+}
+
+.form-field .field-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* Roommate Opt-In Banner Toggle */
+.roommate-toggle-banner {
+  background-color: var(--white);
+  border: 2px solid var(--niner-green);
+  border-radius: 6px;
+  padding: 20px;
+  margin-bottom: 24px;
+  box-shadow: var(--shadow-sm);
+}
+
+.roommate-toggle-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.roommate-toggle-info h2 {
+  font-size: 18px;
+  margin: 0 0 4px;
+  color: var(--niner-green);
+}
+
+.roommate-toggle-info p {
+  margin: 0 0 8px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  max-width: 580px;
+}
+
+.toggle-switch-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Switch input */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 54px;
+  height: 28px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: .3s;
+  border-radius: 28px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: .3s;
+  border-radius: 50%;
+}
+
+.switch input:checked + .slider {
+  background-color: var(--niner-green);
+}
+
+.switch input:focus + .slider {
+  box-shadow: 0 0 0 2px var(--focus-ring);
+}
+
+.switch input:checked + .slider:before {
+  transform: translateX(26px);
+}
+
+/* Status Pill */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.status-pill-inactive {
+  background-color: #eeeeee;
+  color: #555555;
+  border: 1px solid #cccccc;
+}
+
+.status-pill-active {
+  background-color: #e8f5e9;
+  color: #1b5e20;
+  border: 1px solid #81c784;
+}
+
+/* Radio button pills */
+.radio-button-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.radio-pill {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  padding: 6px 12px;
+  font-size: 13px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background-color: var(--off-white);
+  color: var(--text-primary);
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.radio-pill input[type="radio"] {
+  margin-right: 6px;
+  accent-color: var(--niner-green);
+}
+
+.radio-pill:hover {
+  background-color: #eaeaea;
+  border-color: var(--silver);
+}
+
+.radio-pill.selected {
+  background-color: #e6efe9;
+  border-color: var(--niner-green);
+  color: var(--niner-green);
+  font-weight: 600;
+}
+
+/* Checkbox tag pills */
+.tags-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.tag-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  padding: 6px 12px;
+  font-size: 13px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background-color: var(--off-white);
+  color: var(--text-primary);
+  transition: all 0.15s ease;
+}
+
+.tag-checkbox input[type="checkbox"] {
+  accent-color: var(--niner-green);
+}
+
+.tag-checkbox:hover {
+  background-color: #eaeaea;
+  border-color: var(--silver);
+}
+
+.tag-checkbox.checked {
+  background-color: #e6efe9;
+  border-color: var(--niner-green);
+  color: var(--niner-green);
+  font-weight: 600;
+}
+
+/* Actions Footer */
+.profile-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background-color: var(--white);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 16px 24px;
+  box-shadow: var(--shadow-sm);
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+.save-profile-btn {
+  background-color: var(--niner-green);
+  color: var(--white);
+  font-family: var(--sans);
+  font-size: 15px;
+  font-weight: 600;
+  padding: 10px 24px;
+  border: 1px solid var(--niner-green);
+  border-radius: 4px;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.15s ease;
+}
+
+.save-profile-btn:hover {
+  background-color: #003e29;
+  border-color: #003e29;
+}
+
+.reset-profile-btn {
+  background-color: transparent;
+  color: var(--text-secondary);
+  font-size: 14px;
+  padding: 10px 16px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.reset-profile-btn:hover {
+  background-color: var(--off-white);
+  color: var(--text-primary);
+  border-color: var(--silver);
+}
+
+/* Collapsible Section Transitions */
+.roommate-collapsible-section {
+  animation: fadeIn 0.25s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

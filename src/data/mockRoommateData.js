@@ -166,6 +166,30 @@ export const defaultUserLivingPreferences = {
 };
 
 /**
+ * Normalizes sleep schedule strings for filter matching (e.g. 'early_bird' <-> 'Early Bird')
+ */
+export function normalizeSleepSchedule(val) {
+  if (!val) return '';
+  const s = String(val).toLowerCase().replace(/[\s-_]+/g, '');
+  if (s.includes('early')) return 'early_bird';
+  if (s.includes('night')) return 'night_owl';
+  if (s.includes('flex')) return 'flexible';
+  return s;
+}
+
+/**
+ * Normalizes cleanliness strings for filter matching (e.g. 'neat' <-> 'Neat & Organized')
+ */
+export function normalizeCleanliness(val) {
+  if (!val) return '';
+  const c = String(val).toLowerCase().replace(/[\s-_&]+/g, '');
+  if (c.includes('neat') || c.includes('organ')) return 'neat';
+  if (c.includes('mod')) return 'moderate';
+  if (c.includes('relax')) return 'relaxed';
+  return c;
+}
+
+/**
  * Filter function implementing the criteria from RoommateFilterOptions in roommateDB.ts
  */
 export function filterRoommateCandidates(candidates, filters) {
@@ -179,14 +203,14 @@ export function filterRoommateCandidates(candidates, filters) {
 
     // Sleep schedule filter
     if (filters.sleepSchedule && filters.sleepSchedule !== 'all') {
-      if (candidate.sleep_schedule !== filters.sleepSchedule) {
+      if (normalizeSleepSchedule(candidate.sleep_schedule) !== normalizeSleepSchedule(filters.sleepSchedule)) {
         return false;
       }
     }
 
     // Cleanliness filter
     if (filters.cleanliness && filters.cleanliness !== 'all') {
-      if (candidate.cleanliness !== filters.cleanliness) {
+      if (normalizeCleanliness(candidate.cleanliness) !== normalizeCleanliness(filters.cleanliness)) {
         return false;
       }
     }
@@ -208,10 +232,10 @@ export function filterRoommateCandidates(candidates, filters) {
     // Keyword search (name, major, interests, bio)
     if (filters.searchQuery && filters.searchQuery.trim() !== '') {
       const q = filters.searchQuery.toLowerCase();
-      const matchName = candidate.display_name.toLowerCase().includes(q);
-      const matchMajor = candidate.major.toLowerCase().includes(q);
-      const matchBio = candidate.bio.toLowerCase().includes(q);
-      const matchInterests = candidate.interests.toLowerCase().includes(q);
+      const matchName = candidate.display_name?.toLowerCase().includes(q);
+      const matchMajor = candidate.major?.toLowerCase().includes(q);
+      const matchBio = candidate.bio?.toLowerCase().includes(q);
+      const matchInterests = candidate.interests?.toLowerCase().includes(q);
       if (!matchName && !matchMajor && !matchBio && !matchInterests) {
         return false;
       }

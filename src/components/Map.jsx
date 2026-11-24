@@ -112,7 +112,7 @@ export default function HousingMap({ onNavigateBack }) {
           &larr; Back to Home
         </button>
         <h1>UniVerse Campus, Housing &amp; Food Explorer</h1>
-        <p>Verified off-campus living and dining hubs within {milesLabel(radiusMiles)} of UNC Charlotte.</p>
+        <p>Curated off-campus living and dining hubs within {milesLabel(radiusMiles)} of UNC Charlotte.</p>
       </header>
 
       {/* Control Bar */}

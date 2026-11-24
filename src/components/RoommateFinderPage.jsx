@@ -1,10 +1,16 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import './RoommateFinderPage.css';
 import {
   mockRoommates,
   defaultUserLivingPreferences,
   filterRoommateCandidates,
 } from '../data/mockRoommateData';
+import {
+  loadUserProfile,
+  saveUserProfile,
+  mapCleanlinessToDb,
+  mapSleepScheduleToDb,
+} from '../types/profile';
 
 /**
  * RoommateFinderPage Component
@@ -41,6 +47,29 @@ export default function RoommateFinderPage({
   // Navigation & View Tabs
   const [activeTab, setActiveTab] = useState('browse'); // 'browse' | 'preferences' | 'saved'
 
+  // Dynamic Profile Context & Persistence
+  const [userProfile, setUserProfile] = useState(() => loadUserProfile(currentUser));
+  const [prevUser, setPrevUser] = useState(currentUser);
+
+  if (currentUser !== prevUser) {
+    setPrevUser(currentUser);
+    setUserProfile(loadUserProfile(currentUser));
+  }
+
+  useEffect(() => {
+    const handleProfileUpdate = () => {
+      setUserProfile(loadUserProfile(currentUser));
+    };
+    window.addEventListener('universe_profile_saved', handleProfileUpdate);
+    window.addEventListener('storage', handleProfileUpdate);
+    return () => {
+      window.removeEventListener('universe_profile_saved', handleProfileUpdate);
+      window.removeEventListener('storage', handleProfileUpdate);
+    };
+  }, [currentUser]);
+
+  const isUserSeeking = userProfile?.preferences?.isSeekingRoommate === true;
+
   // Filter State (strictly reflects RoommateFilterOptions from roommateDB.ts)
   const [filters, setFilters] = useState({
     searchQuery: '',
@@ -51,8 +80,18 @@ export default function RoommateFinderPage({
     nonSmokingOnly: true,
   });
 
-  // User's own living habits form state (mirrors RoommatePreferenceTable)
-  const [myPreferences, setMyPreferences] = useState(defaultUserLivingPreferences);
+  // User's own living habits form state (mirrors RoommatePreferenceTable and syncs with userProfile)
+  const [myPreferences, setMyPreferences] = useState(() => ({
+    ...defaultUserLivingPreferences,
+    budget_max: userProfile?.preferences?.budgetMax || defaultUserLivingPreferences.budget_max,
+    sleep_schedule: mapSleepScheduleToDb(userProfile?.preferences?.sleepSchedule || 'Flexible'),
+    cleanliness: mapCleanlinessToDb(userProfile?.preferences?.cleanliness || 'Moderate'),
+    pets_ok: userProfile?.preferences?.petPolicy !== 'No pets',
+    smoking_ok: userProfile?.preferences?.smoking === 'Yes',
+    preferred_move_in: userProfile?.preferences?.moveInTerm || defaultUserLivingPreferences.preferred_move_in,
+    housing_preference: (userProfile?.preferences?.preferredAreas || []).join(', ') || defaultUserLivingPreferences.housing_preference,
+    bio: userProfile?.base?.bio || defaultUserLivingPreferences.bio,
+  }));
   const [showSaveSuccess, setShowSaveSuccess] = useState(false);
 
   // Saved / Bookmarked roommates
@@ -63,14 +102,60 @@ export default function RoommateFinderPage({
   const [messageText, setMessageText] = useState('');
   const [messageSentNotice, setMessageSentNotice] = useState(null);
 
+  // Dynamic candidate pool: excludes user when isSeekingRoommate is false, includes user when true
+  const allCandidates = useMemo(() => {
+    const userEmail = (userProfile?.base?.campusEmail || currentUser?.email || '').toLowerCase().trim();
+    const userId = currentUser?.user_id || currentUser?.id;
+
+    // Filter out any mock candidate that matches the current user
+    const baseCandidates = mockRoommates.filter((rm) => {
+      if (userEmail && rm.email && rm.email.toLowerCase().trim() === userEmail) {
+        return false;
+      }
+      if (userId && rm.user_id === userId) {
+        return false;
+      }
+      return true;
+    });
+
+    if (isUserSeeking) {
+      const userCandidate = {
+        user_id: userId || 9999,
+        preference_id: 9999,
+        display_name: userProfile.base.displayName || currentUser?.fullName || 'Current Student',
+        email: userProfile.base.campusEmail || currentUser?.email || 'student@charlotte.edu',
+        major: userProfile.base.major || 'Undergraduate Studies',
+        graduation_year: userProfile.base.gradYear || '2027',
+        bio: userProfile.base.bio || 'Charlotte student seeking off-campus roommates.',
+        interests: (userProfile.preferences.amenities && userProfile.preferences.amenities.length > 0)
+          ? userProfile.preferences.amenities.join(', ')
+          : 'Off-campus housing, Study groups',
+        budget_max: userProfile.preferences.budgetMax || 850,
+        sleep_schedule: mapSleepScheduleToDb(userProfile.preferences.sleepSchedule),
+        cleanliness: mapCleanlinessToDb(userProfile.preferences.cleanliness),
+        pets_ok: userProfile.preferences.petPolicy !== 'No pets',
+        smoking_ok: userProfile.preferences.smoking === 'Yes',
+        preferred_move_in: userProfile.preferences.moveInTerm || 'Fall 2027',
+        housing_preference: (userProfile.preferences.preferredAreas && userProfile.preferences.preferredAreas.length > 0)
+          ? userProfile.preferences.preferredAreas.join(', ')
+          : '2 Bed / 2 Bath near campus',
+        is_current_user: true,
+        updated_at: new Date().toISOString(),
+      };
+      return [userCandidate, ...baseCandidates];
+    }
+
+    return baseCandidates;
+  }, [userProfile, currentUser, isUserSeeking]);
+
   // Computed matching list
   const matchingRoommates = useMemo(() => {
-    return filterRoommateCandidates(mockRoommates, filters);
-  }, [filters]);
+    return filterRoommateCandidates(allCandidates, filters);
+  }, [allCandidates, filters]);
 
   const savedRoommates = useMemo(() => {
-    return mockRoommates.filter((rm) => savedUserIds.has(rm.user_id));
-  }, [savedUserIds]);
+    return allCandidates.filter((rm) => savedUserIds.has(rm.user_id));
+  }, [allCandidates, savedUserIds]);
 
   // Handlers
   const handleFilterChange = (field, value) => {
@@ -102,6 +187,37 @@ export default function RoommateFinderPage({
 
   const handleSaveMyPreferences = (e) => {
     e.preventDefault();
+    const updated = {
+      ...userProfile,
+      base: {
+        ...userProfile.base,
+        bio: myPreferences.bio || userProfile.base.bio,
+      },
+      preferences: {
+        ...userProfile.preferences,
+        budgetMax: Number(myPreferences.budget_max) || userProfile.preferences.budgetMax,
+        sleepSchedule:
+          myPreferences.sleep_schedule === 'early_bird'
+            ? 'Early Bird'
+            : myPreferences.sleep_schedule === 'night_owl'
+            ? 'Night Owl'
+            : 'Flexible',
+        cleanliness:
+          myPreferences.cleanliness === 'neat'
+            ? 'Neat & Organized'
+            : myPreferences.cleanliness === 'moderate'
+            ? 'Moderate'
+            : 'Relaxed',
+        petPolicy: myPreferences.pets_ok ? 'Pet friendly' : 'No pets',
+        smoking: myPreferences.smoking_ok ? 'Yes' : 'No',
+        moveInTerm: myPreferences.preferred_move_in || userProfile.preferences.moveInTerm,
+        preferredAreas: myPreferences.housing_preference
+          ? myPreferences.housing_preference.split(',').map((s) => s.trim()).filter(Boolean)
+          : userProfile.preferences.preferredAreas,
+      },
+    };
+    saveUserProfile(updated);
+    setUserProfile(updated);
     setShowSaveSuccess(true);
     setTimeout(() => setShowSaveSuccess(false), 4000);
   };
@@ -207,7 +323,7 @@ export default function RoommateFinderPage({
             className={`roommate-tab-btn ${activeTab === 'browse' ? 'active' : ''}`}
             onClick={() => setActiveTab('browse')}
           >
-            Browse Candidates ({mockRoommates.length})
+            Browse Candidates ({allCandidates.length})
           </button>
           <button
             type="button"
@@ -246,6 +362,55 @@ export default function RoommateFinderPage({
         {/* TAB 1: BROWSE CANDIDATES */}
         {activeTab === 'browse' && (
           <section aria-label="Roommate Candidates Search">
+            {/* User Roommate Search Status Banner */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '12px 18px',
+                marginBottom: '16px',
+                borderRadius: '6px',
+                flexWrap: 'wrap',
+                gap: '12px',
+                backgroundColor: isUserSeeking ? '#e8f5e9' : 'var(--white)',
+                border: `1px solid ${isUserSeeking ? '#81c784' : 'var(--border-color)'}`,
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                {isUserSeeking ? (
+                  <span className="status-pill status-pill-active">
+                    &bull; Status: Actively searching for roommates
+                  </span>
+                ) : (
+                  <span className="status-pill status-pill-inactive">
+                    &bull; Status: Not looking for roommates
+                  </span>
+                )}
+                <span
+                  style={{
+                    fontSize: '13px',
+                    color: isUserSeeking ? '#1b5e20' : 'var(--text-secondary)',
+                  }}
+                >
+                  {isUserSeeking
+                    ? 'Your profile is published and active in the public Charlotte directory.'
+                    : 'Your profile is excluded from public search results.'}
+                </span>
+              </div>
+
+              {onNavigateToProfile && (
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={onNavigateToProfile}
+                  style={{ fontSize: '13px', padding: '5px 12px' }}
+                >
+                  {isUserSeeking ? 'Manage Preferences' : 'Opt In on Profile'}
+                </button>
+              )}
+            </div>
+
             {/* Filter controls */}
             <div className="roommate-filter-card">
               <h2>Filter Potential Roommates</h2>
@@ -335,7 +500,7 @@ export default function RoommateFinderPage({
               <div className="roommate-results-status">
                 <span>
                   Showing <strong>{matchingRoommates.length}</strong> matching candidates out of{' '}
-                  <strong>{mockRoommates.length}</strong> profiles
+                  <strong>{allCandidates.length}</strong> profiles
                 </span>
                 <span>
                   Saved: <strong>{savedUserIds.size}</strong> roommates
@@ -391,7 +556,21 @@ export default function RoommateFinderPage({
                         <div className="roommate-card-top">
                           <div className="roommate-card-identity">
                             <h3>{candidate.display_name}</h3>
-                            <span className="roommate-verified-badge">[UNCC Verified]</span>
+                            {candidate.is_current_user ? (
+                              <span
+                                className="roommate-verified-badge"
+                                style={{
+                                  backgroundColor: '#e8f5e9',
+                                  color: 'var(--niner-green)',
+                                  borderColor: 'var(--niner-green)',
+                                  fontWeight: 700,
+                                }}
+                              >
+                                [Your Active Listing]
+                              </span>
+                            ) : (
+                              <span className="roommate-verified-badge">[UNCC Verified]</span>
+                            )}
                           </div>
                           <span className="habit-badge habit-badge-budget">
                             Max ${candidate.budget_max}/mo
@@ -434,20 +613,32 @@ export default function RoommateFinderPage({
                       </div>
 
                       <div className="roommate-card-actions">
-                        <button
-                          type="button"
-                          className="btn-primary"
-                          onClick={() => setMessageTarget(candidate)}
-                        >
-                          Connect
-                        </button>
-                        <button
-                          type="button"
-                          className="btn-secondary"
-                          onClick={() => toggleSaveRoommate(candidate.user_id)}
-                        >
-                          {isSaved ? '[Saved]' : 'Save Profile'}
-                        </button>
+                        {candidate.is_current_user ? (
+                          <button
+                            type="button"
+                            className="btn-primary"
+                            onClick={onNavigateToProfile}
+                          >
+                            Edit My Profile
+                          </button>
+                        ) : (
+                          <>
+                            <button
+                              type="button"
+                              className="btn-primary"
+                              onClick={() => setMessageTarget(candidate)}
+                            >
+                              Connect
+                            </button>
+                            <button
+                              type="button"
+                              className="btn-secondary"
+                              onClick={() => toggleSaveRoommate(candidate.user_id)}
+                            >
+                              {isSaved ? '[Saved]' : 'Save Profile'}
+                            </button>
+                          </>
+                        )}
                       </div>
                     </article>
                   );
