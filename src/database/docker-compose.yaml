@@ -55,8 +55,23 @@ services:
       - map_tack_db_data:/var/lib/postgresql/data
       - ./db/map_tack/init:/docker-entrypoint-initdb.d:ro
 
+  forum-db:
+    image: postgres:16
+    container_name: forum-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: forum_db
+    ports:
+      - "5437:5432"
+    volumes:
+      - forum_db_data:/var/lib/postgresql/data
+      - ./init/002_forum_schema.sql:/docker-entrypoint-initdb.d/002_forum_schema.sql:ro
+
 volumes:
   user_db_data:
   course_db_data:
   roommate_db_data:
   map_tack_db_data:
+  forum_db_data:
