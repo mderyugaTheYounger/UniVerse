@@ -5,11 +5,37 @@ import ProfilePage from './components/ProfilePage';
 import CourseCatalogPage from './components/CourseCatalogPage';
 import RoommateFinderPage from './components/RoommateFinderPage';
 import HousingMap from './components/Map';
+import { loadUserProfile } from './types/profile';
 import './App.css';
 
 export default function App() {
   const [currentView, setCurrentView] = useState('landing');
   const [currentUser, setCurrentUser] = useState(null);
+  const [userProfile, setUserProfile] = useState(() => loadUserProfile(null));
+  const [prevUser, setPrevUser] = useState(currentUser);
+
+  // Sync profile when currentUser updates
+  if (currentUser !== prevUser) {
+    setPrevUser(currentUser);
+    setUserProfile(loadUserProfile(currentUser));
+  }
+
+  // Subscribe to profile update events for immediate reactive navigation
+  useEffect(() => {
+    const handleProfileUpdate = () => {
+      setUserProfile(loadUserProfile(currentUser));
+    };
+    window.addEventListener('profileUpdated', handleProfileUpdate);
+    window.addEventListener('universe_profile_saved', handleProfileUpdate);
+    window.addEventListener('storage', handleProfileUpdate);
+    return () => {
+      window.removeEventListener('profileUpdated', handleProfileUpdate);
+      window.removeEventListener('universe_profile_saved', handleProfileUpdate);
+      window.removeEventListener('storage', handleProfileUpdate);
+    };
+  }, [currentUser]);
+
+  const isSeekingRoommate = userProfile?.preferences?.isSeekingRoommate === true;
 
   // Restore authenticated session on page refresh
   useEffect(() => {
@@ -48,16 +74,21 @@ export default function App() {
     setCurrentView('landing');
   };
 
+  const navigateToRoommates = isSeekingRoommate
+    ? () => setCurrentView('roommates')
+    : undefined;
+
   return (
     <div>
       {currentView === 'landing' && (
         <LandingPage
           currentUser={currentUser}
+          isSeekingRoommate={isSeekingRoommate}
           onNavigateToSignIn={() => setCurrentView('signin')}
           onNavigateToSignUp={() => setCurrentView('signup')}
           onNavigateToProfile={() => setCurrentView('profile')}
           onNavigateToCatalog={() => setCurrentView('catalog')}
-          onNavigateToRoommates={() => setCurrentView('roommates')}
+          onNavigateToRoommates={navigateToRoommates}
           onNavigateToMap={() => setCurrentView('map')}
           onLogout={handleLogout}
         />
@@ -75,18 +106,20 @@ export default function App() {
       {currentView === 'profile' && (
         <ProfilePage
           currentUser={currentUser}
+          isSeekingRoommate={isSeekingRoommate}
           onLogout={handleLogout}
           onNavigateToLanding={() => setCurrentView('landing')}
           onNavigateToCatalog={() => setCurrentView('catalog')}
-          onNavigateToRoommates={() => setCurrentView('roommates')}
+          onNavigateToRoommates={navigateToRoommates}
         />
       )}
 
       {currentView === 'catalog' && (
         <CourseCatalogPage
           currentUser={currentUser}
+          isSeekingRoommate={isSeekingRoommate}
           onNavigateToLanding={() => setCurrentView('landing')}
-          onNavigateToRoommates={() => setCurrentView('roommates')}
+          onNavigateToRoommates={navigateToRoommates}
           onNavigateToProfile={() => setCurrentView('profile')}
           onNavigateToSignIn={() => setCurrentView('signin')}
           onLogout={handleLogout}
@@ -96,6 +129,7 @@ export default function App() {
       {currentView === 'roommates' && (
         <RoommateFinderPage
           currentUser={currentUser}
+          isSeekingRoommate={isSeekingRoommate}
           onNavigateToLanding={() => setCurrentView('landing')}
           onNavigateToCatalog={() => setCurrentView('catalog')}
           onNavigateToProfile={() => setCurrentView('profile')}

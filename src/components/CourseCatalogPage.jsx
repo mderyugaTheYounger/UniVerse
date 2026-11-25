@@ -399,6 +399,7 @@ function CourseListHeader() {
 // ============================================================================
 export default function CourseCatalogPage({
   currentUser,
+  isSeekingRoommate,
   onNavigateToLanding,
   onNavigateToRoommates,
   onNavigateToProfile,
@@ -631,9 +632,11 @@ export default function CourseCatalogPage({
           >
             Course Catalog
           </button>
-          <button type="button" className="catalog-nav-link" onClick={onNavigateToRoommates}>
-            Roommate Finder
-          </button>
+          {isSeekingRoommate !== false && onNavigateToRoommates && (
+            <button type="button" className="catalog-nav-link" onClick={onNavigateToRoommates}>
+              Roommate Finder
+            </button>
+          )}
           {currentUser ? (
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
               <button

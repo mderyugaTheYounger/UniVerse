@@ -540,6 +540,14 @@
   margin-bottom: 6px;
 }
 
+.pref-row-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+
 .pref-row input[type="text"],
 .pref-row input[type="number"],
 .pref-row select,
