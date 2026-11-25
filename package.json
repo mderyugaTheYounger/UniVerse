@@ -12,15 +12,15 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1177.0",
+    "@aws-sdk/s3-presigned-post": "^3.1177.0",
+    "@aws-sdk/s3-request-presigner": "^3.1177.0",
     "@react-oauth/google": "^0.13.5",
     "cors": "^2.8.6",
     "dotenv": "^18.0.10",
     "express": "^5.3.0",
     "google-auth-library": "^11.3.4",
     "jsonwebtoken": "^9.0.3",
-    "@aws-sdk/client-s3": "^3.1170.0",
-    "@aws-sdk/s3-presigned-post": "^3.1170.0",
-    "@aws-sdk/s3-request-presigner": "^3.1170.0",
     "kysely": "^0.29.7",
     "leaflet": "^1.9.4",
     "pg": "^8.23.1",
